@@ -141,6 +141,8 @@ private:
     static const int ID_BUTTON_CANCEL_SCAN = 109;
     static const int ID_BUTTON_CANCEL_CONNECT = 110;
 
+    static const int ID_BUTTON_BLUETOOTH = 111;
+
     // Footer constant
     static const int ID_FOOTER_DEVICE_INFO = 200;
     static const int ID_FOOTER_GROUP_CONFIG = 201;

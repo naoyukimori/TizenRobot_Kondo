@@ -29,6 +29,7 @@ using namespace Tizen::Ui::Controls;
 using namespace Tizen::Graphics;
 using namespace Tizen::Net::Wifi;
 using namespace Tizen::Ui::Scenes;
+using namespace Tizen::Net::Bluetooth;
 
 MainForm::MainForm(void)
 	: __pEditFieldDeviceName(null)
@@ -53,7 +54,7 @@ MainForm::~MainForm(void)
 bool
 MainForm::Initialize(void)
 {
-	Construct(FORM_STYLE_NORMAL | FORM_STYLE_HEADER | FORM_STYLE_INDICATOR | FORM_STYLE_FOOTER);
+	Construct(FORM_STYLE_PORTRAIT_INDICATOR | FORM_STYLE_HEADER | FORM_STYLE_FOOTER);
 
 	SetName(FORM_MAIN);
 
@@ -84,7 +85,7 @@ MainForm::OnInitializing(void)
 	if (pHeader != null)
 	{
 		pHeader->SetStyle(HEADER_STYLE_TITLE);
-		pHeader->SetTitleText(L"Wifi direct chat");
+		pHeader->SetTitleText(L"Robot chat");
 	}
 
 	Footer* pFooter = GetFooter();
@@ -111,7 +112,7 @@ MainForm::OnInitializing(void)
 		return E_SUCCESS;
 	}
 	TryReturn(UpdateCurrentState()== true, E_FAILURE, "Failed to initialize the current state");
-
+	AddMainControl(CONTROL_BUTTON, L"Bluetooth", ID_BUTTON_BLUETOOTH);
 	AddMainControl(CONTROL_CHECK_BUTTON_STYLE_RADIO, L"Wi-Fi Direct", ID_BUTTON_ACTIVATE, ID_BUTTON_DEACTIVATE);
 	AddMainControl(CONTROL_EDIT_FILED, L"Device Name");
 	AddMainControl(CONTROL_BUTTON, L"Connect", ID_BUTTON_CONNECT);
@@ -805,7 +806,8 @@ MainForm::AddMainControl(ControlType type, const String& text, int firstActionId
     static const int RIGHT_MARGIN = 40;
     static const int DISPLAY_BUTTON_COUNT = ButtonActionType::COUNT - 1;
     static Rectangle clientRect = GetClientAreaBounds();
-    static int emptySpaceHeight = (clientRect.height - ((DISPLAY_BUTTON_COUNT * ACTION_BUTTON_HEIGHT) + EDIT_FIELD_HEIGHT + CHECK_BUTTON_HEIGHT)) / (DISPLAY_BUTTON_COUNT + 1); // button + edit filed
+    //static int emptySpaceHeight = (clientRect.height - ((DISPLAY_BUTTON_COUNT * ACTION_BUTTON_HEIGHT) + EDIT_FIELD_HEIGHT + CHECK_BUTTON_HEIGHT)) / (DISPLAY_BUTTON_COUNT + 1); // button + edit filed
+    static int emptySpaceHeight = 10;
     static int currentHeight = 0;
 
 

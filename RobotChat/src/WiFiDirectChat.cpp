@@ -49,6 +49,7 @@ WifiDirectChat::OnAppInitializing(AppRegistry& appRegistry)
 	Frame* pWifiDirectChatAppFrame = new Frame();
 	pWifiDirectChatAppFrame->Construct();
 	pWifiDirectChatAppFrame->SetName(APP_NAME);
+	pWifiDirectChatAppFrame->SetOrientation(ORIENTATION_LANDSCAPE);
 	AddFrame(*pWifiDirectChatAppFrame);
 
 	// Register all scenes.
