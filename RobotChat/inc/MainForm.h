@@ -108,6 +108,7 @@ private:
 	void ShowChatPortConfigurationForm(void);
 	void ShowWpsConfigurationModeForm(void);
 	void ShowPeerDeviceListForm(void);
+	void ShowBluetoothScanForm(void);
 
 	void ShowMessageBox(const Tizen::Base::String& title, const Tizen::Base::String& text);
 

@@ -216,6 +216,15 @@ MainForm::ShowWpsConfigurationModeForm()
 
     pSceneManager->GoForward(ForwardSceneTransition(SCENE_WPS_CONFIG_MODE_FORM), pArgs);
 }
+
+void
+MainForm::ShowBluetoothScanForm()
+{
+	SceneManager* pSceneManager = SceneManager::GetInstance();
+	AppAssert(pSceneManager);
+	pSceneManager->GoForward(ForwardSceneTransition(SCENE_BLUETOOTH_SCAN_FORM));
+}
+
 void
 MainForm::ShowPeerDeviceListForm()
 {
@@ -316,6 +325,9 @@ MainForm::OnActionPerformed(const Control& source, int actionId)
 
 	switch (actionId)
 	{
+	case ID_BUTTON_BLUETOOTH:
+		ShowBluetoothScanForm();
+		break;
 	case ID_BUTTON_ACTIVATE:
 		if (__wifiManager.IsActivated())
 		{

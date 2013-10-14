@@ -28,6 +28,7 @@ extern const wchar_t* SCENE_CHAT_MEMBER_DEVICE_LIST_FORM;
 extern const wchar_t* SCENE_CHAT_FORM;
 extern const wchar_t* SCENE_CHAT_PORT_CONFIG_FORM;
 extern const wchar_t* SCENE_WPS_CONFIG_MODE_FORM;
+extern const wchar_t* SCENE_BLUETOOTH_SCAN_FORM;
 
 class SceneRegister
 {
