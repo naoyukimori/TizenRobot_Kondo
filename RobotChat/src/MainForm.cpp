@@ -41,6 +41,8 @@ MainForm::MainForm(void)
 	, __currentState(STATE_ACTIVATED)
 	, __isWiifDirectSupported(true)
 	, __isWifiDeactivating(false)
+	, __isBtActivating(false)
+	, __isBtDeactivating(false)
 {
 }
 
@@ -73,6 +75,13 @@ MainForm::Initialize(void)
 	}
 
 	__wifiManager.Construct(*this);
+
+	if (IsFailed(__btManager.Construct(*this)))
+	{
+		AppLog("BluetoothManager::Construct() [Error].");
+		return false;
+	}
+	__btManager.SetBluetoothDeviceListener(this);
 
 	return true;
 }
@@ -112,7 +121,7 @@ MainForm::OnInitializing(void)
 		return E_SUCCESS;
 	}
 	TryReturn(UpdateCurrentState()== true, E_FAILURE, "Failed to initialize the current state");
-	AddMainControl(CONTROL_BUTTON, L"Bluetooth", ID_BUTTON_BLUETOOTH);
+	AddMainControl(CONTROL_CHECK_BUTTON_STYLE_RADIO, L"Bluetooth", ID_BUTTON_BLUETOOTH_TOGGLED, ID_BUTTON_BLUETOOTH_TOGGLED);
 	AddMainControl(CONTROL_CHECK_BUTTON_STYLE_RADIO, L"Wi-Fi Direct", ID_BUTTON_ACTIVATE, ID_BUTTON_DEACTIVATE);
 	AddMainControl(CONTROL_EDIT_FILED, L"Device Name");
 	AddMainControl(CONTROL_BUTTON, L"Connect", ID_BUTTON_CONNECT);
@@ -126,6 +135,11 @@ MainForm::OnInitializing(void)
 
 	UpdateLocalDeviceName();
 	UpdateControl();
+
+	if (__btManager.IsActivated())
+	{
+		static_cast<CheckButton*>(__controlList.GetAt(ButtonActionType::BT_ON_OFF))->SetSelected(true);
+	}
 	return E_SUCCESS;
 }
 
@@ -325,8 +339,20 @@ MainForm::OnActionPerformed(const Control& source, int actionId)
 
 	switch (actionId)
 	{
-	case ID_BUTTON_BLUETOOTH:
-		ShowBluetoothScanForm();
+	case ID_BUTTON_BLUETOOTH_TOGGLED:
+		if (__btManager.IsActivated())
+		{
+			__isBtDeactivating = true;
+			ShowWaitPopup(L"Deactivating bluetooth...");
+			r = __btManager.Deactivate();
+		}
+		else
+		{
+			__isBtActivating = true;
+			ShowWaitPopup(L"Activating bluetooth...");
+			r = __btManager.Activate();
+			ShowBluetoothScanForm();
+		}
 		break;
 	case ID_BUTTON_ACTIVATE:
 		if (__wifiManager.IsActivated())
@@ -627,7 +653,7 @@ MainForm::OnWifiDeactivated(result r)
 		if (r != E_SUCCESS)
 		{
 			HideWaitPopup();
-			static_cast<CheckButton*>(__controlList.GetAt(ButtonActionType::ON_OFF))->SetSelected(false);
+			static_cast<CheckButton*>(__controlList.GetAt(ButtonActionType::WIFI_ON_OFF))->SetSelected(false);
 			ShowMessageBox(L"Activate", L"Failed to Activate");
 		}
 	}
@@ -672,6 +698,23 @@ void
 MainForm::OnSceneDeactivated(const SceneId &currentSceneId, const SceneId &nextSceneId)
 {
 }
+
+void
+MainForm::OnBluetoothActivated(result r)
+{
+	HideWaitPopup();
+	__isBtActivating = false;
+	static_cast<CheckButton*>(__controlList.GetAt(ButtonActionType::BT_ON_OFF))->SetSelected(true);
+}
+
+void
+MainForm::OnBluetoothDeactivated(result r)
+{
+	HideWaitPopup();
+	__isBtDeactivating = false;
+	static_cast<CheckButton*>(__controlList.GetAt(ButtonActionType::BT_ON_OFF))->SetSelected(false);
+}
+
 void
 MainForm::UpdateControl(void)
 {
@@ -692,7 +735,7 @@ MainForm::UpdateControl(void)
     case STATE_DEACTIVATED:
         {
         	__pEditFieldDeviceName->SetEnabled(true);
-            static_cast<CheckButton*>(__controlList.GetAt(ButtonActionType::ON_OFF))->SetSelected(false);
+            static_cast<CheckButton*>(__controlList.GetAt(ButtonActionType::WIFI_ON_OFF))->SetSelected(false);
             static_cast<Button*>(__controlList.GetAt(ButtonActionType::SCAN_CONNECT))->SetEnabled(false);
             static_cast<Button*>(__controlList.GetAt(ButtonActionType::CREATE_AUTO_GROUP))->SetEnabled(false);
             static_cast<Button*>(__controlList.GetAt(ButtonActionType::LEAVE_GROUP))->SetEnabled(false);
@@ -702,7 +745,7 @@ MainForm::UpdateControl(void)
     case STATE_ACTIVATED:
         {
         	__pEditFieldDeviceName->SetEnabled(false);
-            static_cast<CheckButton*>(__controlList.GetAt(ButtonActionType::ON_OFF))->SetSelected(true);
+            static_cast<CheckButton*>(__controlList.GetAt(ButtonActionType::WIFI_ON_OFF))->SetSelected(true);
             static_cast<Button*>(__controlList.GetAt(ButtonActionType::SCAN_CONNECT))->SetEnabled(true);
             static_cast<Button*>(__controlList.GetAt(ButtonActionType::CREATE_AUTO_GROUP))->SetEnabled(true);
             static_cast<Button*>(__controlList.GetAt(ButtonActionType::LEAVE_GROUP))->SetEnabled(false);
@@ -722,7 +765,7 @@ MainForm::UpdateControl(void)
     case STATE_AUTO_GROUP_OWNER:
            {
            	   __pEditFieldDeviceName->SetEnabled(false);
-               static_cast<CheckButton*>(__controlList.GetAt(ButtonActionType::ON_OFF))->SetSelected(true);
+               static_cast<CheckButton*>(__controlList.GetAt(ButtonActionType::WIFI_ON_OFF))->SetSelected(true);
                static_cast<Button*>(__controlList.GetAt(ButtonActionType::SCAN_CONNECT))->SetEnabled(true);
                static_cast<Button*>(__controlList.GetAt(ButtonActionType::CREATE_AUTO_GROUP))->SetEnabled(false);
                static_cast<Button*>(__controlList.GetAt(ButtonActionType::LEAVE_GROUP))->SetEnabled(true);
@@ -733,7 +776,7 @@ MainForm::UpdateControl(void)
     case STATE_GROUP_OWNER:
         {
         	__pEditFieldDeviceName->SetEnabled(false);
-            static_cast<CheckButton*>(__controlList.GetAt(ButtonActionType::ON_OFF))->SetSelected(true);
+            static_cast<CheckButton*>(__controlList.GetAt(ButtonActionType::WIFI_ON_OFF))->SetSelected(true);
             static_cast<Button*>(__controlList.GetAt(ButtonActionType::SCAN_CONNECT))->SetEnabled(true);
             static_cast<Button*>(__controlList.GetAt(ButtonActionType::CREATE_AUTO_GROUP))->SetEnabled(false);
             static_cast<Button*>(__controlList.GetAt(ButtonActionType::LEAVE_GROUP))->SetEnabled(true);
@@ -753,7 +796,7 @@ MainForm::UpdateControl(void)
     case STATE_GROUP_CLIENT:
         {
         	__pEditFieldDeviceName->SetEnabled(false);
-            static_cast<CheckButton*>(__controlList.GetAt(ButtonActionType::ON_OFF))->SetSelected(true);
+            static_cast<CheckButton*>(__controlList.GetAt(ButtonActionType::WIFI_ON_OFF))->SetSelected(true);
             static_cast<Button*>(__controlList.GetAt(ButtonActionType::SCAN_CONNECT))->SetEnabled(false);
             static_cast<Button*>(__controlList.GetAt(ButtonActionType::CREATE_AUTO_GROUP))->SetEnabled(false);
             static_cast<Button*>(__controlList.GetAt(ButtonActionType::LEAVE_GROUP))->SetEnabled(true);
@@ -810,9 +853,9 @@ MainForm::UpdateCurrentState(void)
 bool
 MainForm::AddMainControl(ControlType type, const String& text, int firstActionId /*= -1*/, int secondActionId /*= -1*/)
 {
-    static const int ACTION_BUTTON_HEIGHT = 74;
-    static const int EDIT_FIELD_HEIGHT = 112;
-    static const int CHECK_BUTTON_HEIGHT = 112;
+    static const int ACTION_BUTTON_HEIGHT = 72;
+    static const int EDIT_FIELD_HEIGHT = 96;
+    static const int CHECK_BUTTON_HEIGHT = 96;
     static const int DEVICE_NAME_LIMIT = 64;
     static const int LEFT_MARGIN = 20;
     static const int RIGHT_MARGIN = 40;
@@ -937,7 +980,7 @@ MainForm::Activate(void)
 	}
 	else
 	{
-		static_cast<CheckButton*>(__controlList.GetAt(ButtonActionType::ON_OFF))->SetSelected(false);
+		static_cast<CheckButton*>(__controlList.GetAt(ButtonActionType::WIFI_ON_OFF))->SetSelected(false);
 		ShowMessageBox(L"Activate", L"Failed to Activate");
 	}
 

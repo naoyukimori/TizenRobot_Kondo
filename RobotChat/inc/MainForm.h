@@ -27,7 +27,8 @@
 
 namespace ButtonActionType
 {
-    enum Enum { ON_OFF,
+    enum Enum { BT_ON_OFF,
+    			WIFI_ON_OFF,
                 SCAN_CONNECT,
                 CREATE_AUTO_GROUP,
                 LEAVE_GROUP,
@@ -43,6 +44,9 @@ class MainForm
 	, public Tizen::Ui::Scenes::ISceneEventListener
 	, public Tizen::Net::Wifi::IWifiDirectDeviceListener
 	, public Tizen::Net::Wifi::IWifiManagerEventListener
+	, public Tizen::Net::Bluetooth::BluetoothDevice
+	, public Tizen::Net::Bluetooth::IBluetoothDeviceEventListener
+	, public Tizen::Net::Bluetooth::IBluetoothManagerEventListener
 {
 	enum CurrentState { STATE_DEACTIVATED,
 	                    STATE_ACTIVATED,
@@ -51,7 +55,7 @@ class MainForm
 	                    STATE_GROUP_CLIENT };
 	enum ControlType { CONTROL_EDIT_FILED,
 	                   CONTROL_BUTTON,
-	                   CONTROL_CHECK_BUTTON_STYLE_RADIO };
+	                   CONTROL_CHECK_BUTTON_STYLE_RADIO};
 
 public:
 	MainForm(void);
@@ -100,6 +104,19 @@ public:
 	virtual void OnWifiRssiChanged(long rssi){}
 	virtual void OnWifiScanCompletedN(const Tizen::Base::Collection::IList* pWifiBssInfoList, result r){}
 
+	// IBluetoothDeviceEventListener
+	virtual void  OnBluetoothDiscoveryDone (bool isCompleted){}
+	virtual void  OnBluetoothDiscoveryStarted (result r){}
+	virtual void  OnBluetoothPaired (const BluetoothDevice &pairedDevice){}
+	virtual void  OnBluetoothPairingFailed (result r) {}
+	virtual void  OnBluetoothRemoteDeviceFoundN (BluetoothDevice *pFoundDevice){}
+	virtual void  OnBluetoothServiceListReceived (const BluetoothDevice &targetDevice, unsigned long serviceList, result r){}
+	virtual void  OnBluetoothUnpaired (const BluetoothDevice &unpairedDevice){}
+
+	// IBluetoothManagerEventListener
+	virtual void  OnBluetoothActivated (result r);
+	virtual void  OnBluetoothDeactivated (result r);
+
 private:
 	void ShowMainForm(void);
 	void ShowDeviceInfoForm(void);
@@ -142,7 +159,7 @@ private:
     static const int ID_BUTTON_CANCEL_SCAN = 109;
     static const int ID_BUTTON_CANCEL_CONNECT = 110;
 
-    static const int ID_BUTTON_BLUETOOTH = 111;
+    static const int ID_BUTTON_BLUETOOTH_TOGGLED = 111;
 
     // Footer constant
     static const int ID_FOOTER_DEVICE_INFO = 200;
@@ -169,6 +186,10 @@ private:
 	bool __isWiifDirectSupported;
 	bool __isWifiDeactivating;
 	Tizen::Net::Wifi::WifiManager __wifiManager;
+
+	bool __isBtActivating;
+	bool __isBtDeactivating;
+	Tizen::Net::Bluetooth::BluetoothManager __btManager;
 };
 
 #endif  //_MAIN_FORM_H_
