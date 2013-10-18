@@ -202,6 +202,21 @@ MainForm::ShowChatForm(void)
 
     pSceneManager->GoForward(ForwardSceneTransition(SCENE_CHAT_FORM), pArgs);
 }
+
+void
+MainForm::ShowRobotChatForm(void)
+{
+    SceneManager* pSceneManager = SceneManager::GetInstance();
+    AppAssert(pSceneManager);
+
+    ArrayList* pArgs = new ArrayList();
+
+    pArgs->Add(*__pWifiDirectLocalDevice);
+    pArgs->Add(__chatPortNumber);
+
+    pSceneManager->GoForward(ForwardSceneTransition(SCENE_ROBOT_CHAT_FORM), pArgs);
+}
+
 void
 MainForm::ShowChatPortConfigurationForm()
 {
@@ -426,7 +441,10 @@ MainForm::OnActionPerformed(const Control& source, int actionId)
         }
         break;
 	case ID_BUTTON_START_CHAT:
-	    ShowChatForm();
+		if (__btManager.IsActivated())
+			ShowRobotChatForm();
+		else
+			ShowChatForm();
 		break;
 
 	case ID_FOOTER_DEVICE_INFO:
@@ -739,7 +757,7 @@ MainForm::UpdateControl(void)
             static_cast<Button*>(__controlList.GetAt(ButtonActionType::SCAN_CONNECT))->SetEnabled(false);
             static_cast<Button*>(__controlList.GetAt(ButtonActionType::CREATE_AUTO_GROUP))->SetEnabled(false);
             static_cast<Button*>(__controlList.GetAt(ButtonActionType::LEAVE_GROUP))->SetEnabled(false);
-            static_cast<Button*>(__controlList.GetAt(ButtonActionType::START_CHAT))->SetEnabled(false);
+            static_cast<Button*>(__controlList.GetAt(ButtonActionType::START_CHAT))->SetEnabled(true);
         }
         break;
     case STATE_ACTIVATED:
@@ -749,7 +767,7 @@ MainForm::UpdateControl(void)
             static_cast<Button*>(__controlList.GetAt(ButtonActionType::SCAN_CONNECT))->SetEnabled(true);
             static_cast<Button*>(__controlList.GetAt(ButtonActionType::CREATE_AUTO_GROUP))->SetEnabled(true);
             static_cast<Button*>(__controlList.GetAt(ButtonActionType::LEAVE_GROUP))->SetEnabled(false);
-            static_cast<Button*>(__controlList.GetAt(ButtonActionType::START_CHAT))->SetEnabled(false);
+            static_cast<Button*>(__controlList.GetAt(ButtonActionType::START_CHAT))->SetEnabled(true);
 
             FooterItem footerItemGroupConfig;
             footerItemGroupConfig.Construct(ID_FOOTER_GROUP_CONFIG);
@@ -769,7 +787,7 @@ MainForm::UpdateControl(void)
                static_cast<Button*>(__controlList.GetAt(ButtonActionType::SCAN_CONNECT))->SetEnabled(true);
                static_cast<Button*>(__controlList.GetAt(ButtonActionType::CREATE_AUTO_GROUP))->SetEnabled(false);
                static_cast<Button*>(__controlList.GetAt(ButtonActionType::LEAVE_GROUP))->SetEnabled(true);
-               static_cast<Button*>(__controlList.GetAt(ButtonActionType::START_CHAT))->SetEnabled(false);
+               static_cast<Button*>(__controlList.GetAt(ButtonActionType::START_CHAT))->SetEnabled(true);
 
            }
            break;

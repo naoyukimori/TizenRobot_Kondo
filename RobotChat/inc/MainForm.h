@@ -122,6 +122,7 @@ private:
 	void ShowDeviceInfoForm(void);
 	void ShowGroupConfigurationForm(void);
 	void ShowChatForm(void);
+	void ShowRobotChatForm(void);
 	void ShowChatPortConfigurationForm(void);
 	void ShowWpsConfigurationModeForm(void);
 	void ShowPeerDeviceListForm(void);

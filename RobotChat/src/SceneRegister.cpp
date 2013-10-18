@@ -29,6 +29,7 @@ const wchar_t* SCENE_SCAN_RESULT_DEVICE_LIST_FORM = L"Scene_ScanResultDeviceList
 const wchar_t* SCENE_PEER_DEVICE_LIST_FORM = L"Scene_GroupMemberDeviceListForm";
 const wchar_t* SCENE_CHAT_MEMBER_DEVICE_LIST_FORM = L"Scene_ChatMemberDeviceListForm";
 const wchar_t* SCENE_CHAT_FORM = L"Scene_ChatForm";
+const wchar_t* SCENE_ROBOT_CHAT_FORM = L"Scene_RobotChatForm";
 const wchar_t* SCENE_CHAT_PORT_CONFIG_FORM = L"Scene_ChatPortConfigurationForm";
 const wchar_t* SCENE_WPS_CONFIG_MODE_FORM = L"Scene_WpsConfigurationModeForm";
 const wchar_t* SCENE_BLUETOOTH_SCAN_FORM = L"Scene_BluetoothScanForm";
@@ -58,6 +59,7 @@ SceneRegister::RegisterAllScenes(void)
     pSceneManager->RegisterScene(SCENE_PEER_DEVICE_LIST_FORM, FORM_PEER_DEVICE_LIST, PANEL_BLANK);
     pSceneManager->RegisterScene(SCENE_CHAT_MEMBER_DEVICE_LIST_FORM, FORM_CHAT_MEMBER_DEVICE_LIST, PANEL_BLANK);
     pSceneManager->RegisterScene(SCENE_CHAT_FORM, FORM_CHAT, PANEL_BLANK);
+    pSceneManager->RegisterScene(SCENE_ROBOT_CHAT_FORM, FORM_ROBOT_CHAT, PANEL_BLANK);
     pSceneManager->RegisterScene(SCENE_CHAT_PORT_CONFIG_FORM, FORM_CHAT_PORT_CONFIGURATION, PANEL_BLANK);
     pSceneManager->RegisterScene(SCENE_WPS_CONFIG_MODE_FORM, FORM_WPS_CONFIGURATION_MODE, PANEL_BLANK);
     pSceneManager->RegisterScene(SCENE_BLUETOOTH_SCAN_FORM, FORM_BLUETOOTH_SCAN, PANEL_BLANK);
