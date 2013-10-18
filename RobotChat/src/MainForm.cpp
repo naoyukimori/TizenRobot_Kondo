@@ -139,6 +139,7 @@ MainForm::OnInitializing(void)
 	if (__btManager.IsActivated())
 	{
 		static_cast<CheckButton*>(__controlList.GetAt(ButtonActionType::BT_ON_OFF))->SetSelected(true);
+		static_cast<Button*>(__controlList.GetAt(ButtonActionType::START_CHAT))->SetEnabled(true);
 	}
 	return E_SUCCESS;
 }
@@ -366,7 +367,7 @@ MainForm::OnActionPerformed(const Control& source, int actionId)
 			__isBtActivating = true;
 			ShowWaitPopup(L"Activating bluetooth...");
 			r = __btManager.Activate();
-			ShowBluetoothScanForm();
+			// ShowBluetoothScanForm();
 		}
 		break;
 	case ID_BUTTON_ACTIVATE:
@@ -723,6 +724,7 @@ MainForm::OnBluetoothActivated(result r)
 	HideWaitPopup();
 	__isBtActivating = false;
 	static_cast<CheckButton*>(__controlList.GetAt(ButtonActionType::BT_ON_OFF))->SetSelected(true);
+	static_cast<Button*>(__controlList.GetAt(ButtonActionType::START_CHAT))->SetEnabled(true);
 }
 
 void
@@ -757,7 +759,7 @@ MainForm::UpdateControl(void)
             static_cast<Button*>(__controlList.GetAt(ButtonActionType::SCAN_CONNECT))->SetEnabled(false);
             static_cast<Button*>(__controlList.GetAt(ButtonActionType::CREATE_AUTO_GROUP))->SetEnabled(false);
             static_cast<Button*>(__controlList.GetAt(ButtonActionType::LEAVE_GROUP))->SetEnabled(false);
-            static_cast<Button*>(__controlList.GetAt(ButtonActionType::START_CHAT))->SetEnabled(true);
+            static_cast<Button*>(__controlList.GetAt(ButtonActionType::START_CHAT))->SetEnabled(false);
         }
         break;
     case STATE_ACTIVATED:
@@ -767,7 +769,7 @@ MainForm::UpdateControl(void)
             static_cast<Button*>(__controlList.GetAt(ButtonActionType::SCAN_CONNECT))->SetEnabled(true);
             static_cast<Button*>(__controlList.GetAt(ButtonActionType::CREATE_AUTO_GROUP))->SetEnabled(true);
             static_cast<Button*>(__controlList.GetAt(ButtonActionType::LEAVE_GROUP))->SetEnabled(false);
-            static_cast<Button*>(__controlList.GetAt(ButtonActionType::START_CHAT))->SetEnabled(true);
+            static_cast<Button*>(__controlList.GetAt(ButtonActionType::START_CHAT))->SetEnabled(false);
 
             FooterItem footerItemGroupConfig;
             footerItemGroupConfig.Construct(ID_FOOTER_GROUP_CONFIG);
@@ -787,7 +789,7 @@ MainForm::UpdateControl(void)
                static_cast<Button*>(__controlList.GetAt(ButtonActionType::SCAN_CONNECT))->SetEnabled(true);
                static_cast<Button*>(__controlList.GetAt(ButtonActionType::CREATE_AUTO_GROUP))->SetEnabled(false);
                static_cast<Button*>(__controlList.GetAt(ButtonActionType::LEAVE_GROUP))->SetEnabled(true);
-               static_cast<Button*>(__controlList.GetAt(ButtonActionType::START_CHAT))->SetEnabled(true);
+               static_cast<Button*>(__controlList.GetAt(ButtonActionType::START_CHAT))->SetEnabled(false);
 
            }
            break;
