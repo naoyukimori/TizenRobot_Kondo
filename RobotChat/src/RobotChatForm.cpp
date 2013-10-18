@@ -22,6 +22,7 @@ using namespace Tizen::Graphics;
 using namespace Tizen::Base::Collection;
 using namespace Tizen::Base::Utility;
 using namespace Tizen::Ui::Scenes;
+using namespace Tizen::Media;
 
 RobotChatForm::RobotChatForm()
 	: __localIpAddress()
@@ -30,6 +31,8 @@ RobotChatForm::RobotChatForm()
 	, __pWifiDirectDevice(null)
 	, __pNetConnection(null)
 	, __pUdpSocket(null)
+	, __pPlayer(null)
+	, __pOverlay(null)
 {
 
 }
@@ -38,12 +41,17 @@ RobotChatForm::~RobotChatForm()
 {
 	delete __pUdpSocket;
 	delete __pNetConnection;
+
+	__pPlayer->Close();
 }
 
 bool
 RobotChatForm::Initialize(void)
 {
-	Construct(FORM_STYLE_NORMAL);
+	VerticalBoxLayout formLayout;
+	formLayout.Construct(VERTICAL_DIRECTION_DOWNWARD);
+
+	Construct(formLayout, FORM_STYLE_NORMAL);
 	SetName(FORM_ROBOT_CHAT);
 
 	NetAccountManager netAccountManager;
@@ -73,9 +81,18 @@ result
 RobotChatForm::OnInitializing(void)
 {
 	SetOrientation(ORIENTATION_LANDSCAPE);
+
 	SetFormBackEventListener(this);
 
-	Draw(true);
+	__pPlayer.reset(new (std::nothrow) Player());
+	if ( __pPlayer.get() == null)
+	{
+		AppLogException("pPlayer = new (std::nothrow) Player() has failed");
+		return E_FAILURE;
+	}
+
+	StartVideoWithVideoEventListener(L"");
+
 	return E_SUCCESS;
 }
 
@@ -129,7 +146,6 @@ RobotChatForm::OnSocketReadyToReceive(Socket& socket)
 	unsigned long arg = 0;
 	Ip4Address ip4Address("0"); //ADDR_ANY
 	String deviceName(L"");
-	int deviceIndex = 0;
 
 	r = socket.Ioctl(NET_SOCKET_FIONREAD, arg);
 	TryReturnVoid(r == E_SUCCESS, "Socket ioctl for read is failed");
@@ -171,4 +187,88 @@ RobotChatForm::OnSocketReadyToReceive(Socket& socket)
 	{
 
 	}
+}
+
+/*
+void
+RobotChatForm::CreateOverlayRegion(void)
+{
+	bool modified = false;
+	bool isValidRect = false;
+	Rectangle rect = GetClientAreaBounds();
+
+	__pPanel.reset(Tizen::Ui::Controls::Form::GetOverlayRegionN(rect, OVERLAY_REGION_TYPE_NORMAL));
+	TryReturn(__pPanel.get() != null, ,"GetOverlayRegion Failed");
+	AppLog("__pPanel : %s", GetErrorMessage(GetLastResult()));
+	__pPanel->Show();
+}
+*/
+
+result
+RobotChatForm::StartVideoWithVideoEventListener(String path)
+{
+	result r = E_SUCCESS;
+    Rectangle rect = GetClientAreaBounds();
+    String filePath = Tizen::App::App::GetInstance()->GetAppRootPath() + L"res/Video/sampleH264.mp4";
+
+    r = __pPlayer->Construct(*this, *this);
+    if (IsFailed(r))
+    {
+        return r;
+    }
+
+    r = __pPlayer->OpenFile(filePath);
+    if (IsFailed(r))
+    {
+    	return r;
+    }
+
+    // Gets OverlayRegion from this Form
+    __pOverlay.reset(Tizen::Ui::Controls::Form::GetOverlayRegionN(rect, OVERLAY_REGION_TYPE_NORMAL));
+    if (__pOverlay == null)
+    {
+    	return GetLastResult();
+    }
+
+    r = __pPlayer->Play();
+    if (IsFailed(r))
+    {
+    	return r;
+    }
+
+    return E_SUCCESS;
+}
+
+void
+RobotChatForm::OnVideoFrameDecoded(Player &src, BitmapPixelFormat bitmapPixelFormat, const Dimension &dim,
+										const byte *pBuffer, int sizeOfBuffer, result r)
+{
+    ByteBuffer buf;
+    OverlayRegionBufferPixelFormat overlayPixelFormat;
+
+    if (IsFailed(r))
+    {
+        return;
+    }
+
+    if (__pOverlay == null)
+    {
+        return;
+    }
+
+    if (bitmapPixelFormat == BITMAP_PIXEL_FORMAT_ARGB8888)
+    {
+        overlayPixelFormat = OVERLAY_REGION_BUFFER_PIXEL_FORMAT_ARGB8888;
+    }
+    else if (bitmapPixelFormat == BITMAP_PIXEL_FORMAT_RGB565)
+    {
+        overlayPixelFormat = OVERLAY_REGION_BUFFER_PIXEL_FORMAT_RGB565;
+    }
+    else // Unsupported pixel format
+    {
+        return;
+    }
+
+    buf.Construct(pBuffer, 0, sizeOfBuffer, sizeOfBuffer);
+    __pOverlay->SetInputBuffer(buf, dim, overlayPixelFormat);
 }
