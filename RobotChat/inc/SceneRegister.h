@@ -30,6 +30,7 @@ extern const wchar_t* SCENE_ROBOT_CHAT_FORM;
 extern const wchar_t* SCENE_CHAT_PORT_CONFIG_FORM;
 extern const wchar_t* SCENE_WPS_CONFIG_MODE_FORM;
 extern const wchar_t* SCENE_BLUETOOTH_SCAN_FORM;
+extern const wchar_t* SCENE_BLUETOOTH_DEBUG_FORM;
 
 class SceneRegister
 {

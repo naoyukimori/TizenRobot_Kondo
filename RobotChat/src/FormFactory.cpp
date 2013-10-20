@@ -25,6 +25,7 @@
 #include "DeviceInfoForm.h"
 #include "WpsConfigurationModeForm.h"
 #include "BluetoothScanForm.h"
+#include "BluetoothDebugForm.h"
 
 using namespace Tizen::Ui::Scenes;
 using namespace Tizen::Ui::Controls;
@@ -42,6 +43,7 @@ const wchar_t* FORM_ROBOT_CHAT = L"Form_RobotChat";
 const wchar_t* FORM_CHAT_PORT_CONFIGURATION = L"Form_ChatPortConfiguration";
 const wchar_t* FORM_WPS_CONFIGURATION_MODE = L"Form_WpsConfigurationMode";
 const wchar_t* FORM_BLUETOOTH_SCAN = L"Form_BluetoothScan";
+const wchar_t* FORM_BLUETOOTH_DEBUG = L"Form_BluetoothDebug";
 
 // This is used only for SetName()
 const wchar_t* FORM_DEVICE_LIST = L"Form_DeviceList";
@@ -135,6 +137,13 @@ FormFactory::CreateFormN(const String& formId, const SceneId& sceneId)
 	else if (formId == FORM_BLUETOOTH_SCAN)
 	{
 		BluetoothScanForm* pForm = new (std::nothrow) BluetoothScanForm();
+		pForm->Initialize();
+		pSceneManager->AddSceneEventListener(sceneId, *pForm);
+		pNewForm = pForm;
+	}
+	else if (formId == FORM_BLUETOOTH_DEBUG)
+	{
+		BluetoothDebugForm* pForm = new (std::nothrow) BluetoothDebugForm();
 		pForm->Initialize();
 		pSceneManager->AddSceneEventListener(sceneId, *pForm);
 		pNewForm = pForm;

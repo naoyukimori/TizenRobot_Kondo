@@ -32,6 +32,7 @@ extern const wchar_t* FORM_ROBOT_CHAT;
 extern const wchar_t* FORM_CHAT_PORT_CONFIGURATION;
 extern const wchar_t* FORM_WPS_CONFIGURATION_MODE;
 extern const wchar_t* FORM_BLUETOOTH_SCAN;
+extern const wchar_t* FORM_BLUETOOTH_DEBUG;
 
 // This is used only for SetName()
 extern const wchar_t* FORM_DEVICE_LIST;

@@ -43,11 +43,15 @@ MainForm::MainForm(void)
 	, __isWifiDeactivating(false)
 	, __isBtActivating(false)
 	, __isBtDeactivating(false)
+	//, __isBtKBTReady(false)
 {
 }
 
 MainForm::~MainForm(void)
 {
+	//Disconnect from the SPP acceptor:
+	//__sppInitiator.Disconnect();
+
 	delete __pPopupWait;
 	delete __pPopupScan;
 	delete __pPopupConnect;
@@ -76,11 +80,78 @@ MainForm::Initialize(void)
 
 	__wifiManager.Construct(*this);
 
+	// Bluetooth initialize section
 	if (IsFailed(__btManager.Construct(*this)))
 	{
 		AppLog("BluetoothManager::Construct() [Error].");
 		return false;
 	}
+#if 0
+	{
+		String localName = __btManager.GetLocalDeviceName();
+		String localAddress = __btManager.GetLocalDeviceAddress(); // For example: "00:3D:47:EF:8A:03"
+		AppLog("Bluetooth: localName=%S.\n", localName.GetPointer());
+		AppLog("Bluetooth: localAddress=%S.\n", localAddress.GetPointer());
+		{
+			IList* pPairedDeviceList = __btManager.GetPairedDeviceListN();
+			// Get the paired device element at the index 0
+			for ( int i=0; i< pPairedDeviceList->GetCount(); i++) {
+				BluetoothDevice* pPairedDevice = (BluetoothDevice*)pPairedDeviceList->GetAt(i);
+				// Get information from the paired device
+				String pairedDeviceName = pPairedDevice->GetName();
+				AppLog("Bluetooth: paired(%d): %S.\n", i, pairedDeviceName.GetPointer());
+			}
+			pPairedDeviceList->RemoveAll(true); // Clear resources after use to prevent memory leaks
+
+			delete pPairedDeviceList;
+		}
+	}
+#endif
+#if 0
+	{
+		//BluetoothSppInitiator sppInitiator;
+		// The application must implement the IBluetoothSppInitiatorEventListener interface
+		__sppInitiator.Construct(*this);
+
+		if (__btManager.IsActivated() == false)
+		   __btManager.Activate();
+
+		{
+			IList* pPairedDeviceList = __btManager.GetPairedDeviceListN();
+			// Get the paired device element at the index 0
+			for ( int i=0; i< pPairedDeviceList->GetCount(); i++) {
+				BluetoothDevice* pPairedDevice = (BluetoothDevice*)pPairedDeviceList->GetAt(i);
+				// Get information from the paired device
+				String pairedDeviceName = pPairedDevice->GetName();
+				if ( pairedDeviceName == "KBT-1" || pairedDeviceName == "KBT-1-2") {
+					AppLog("Bluetooth: found paired %S in list. trying to connect...\n", pairedDeviceName.GetPointer());
+					//Connect to the SPP acceptor.
+					if (__sppInitiator.Connect(*pPairedDevice) == E_SUCCESS) {
+						__isBtKBTReady = true;
+						AppLog("Bluetooth: %S connected!\n", pairedDeviceName.GetPointer());
+						break;
+					}
+				}
+			}
+			pPairedDeviceList->RemoveAll(true); // Clear resources after use to prevent memory leaks
+			delete pPairedDeviceList;
+			if (!__isBtKBTReady) {
+				AppLog("Bluetooth: KBT-1 not found or not connected!");
+				return true;
+			}
+		}
+
+		//Send data when the connection is established:
+		//ByteBuffer sendBuffer;
+		//sendBuffer.SetByte('A');
+		//__sppInitiator.SendData(sendBuffer);
+		//sendTextMsg = ['0x04', '0xFE', '0x06', '0x08' ];	// ping command
+
+		//Disconnect from the SPP acceptor:
+		//sppInitiator.Disconnect();
+
+	}
+#endif
 	__btManager.SetBluetoothDeviceListener(this);
 
 	return true;
@@ -255,6 +326,14 @@ MainForm::ShowBluetoothScanForm()
 }
 
 void
+MainForm::ShowBluetoothDebugForm()
+{
+	SceneManager* pSceneManager = SceneManager::GetInstance();
+	AppAssert(pSceneManager);
+	pSceneManager->GoForward(ForwardSceneTransition(SCENE_BLUETOOTH_DEBUG_FORM));
+}
+
+void
 MainForm::ShowPeerDeviceListForm()
 {
     IList* pArgs = null;
@@ -366,7 +445,8 @@ MainForm::OnActionPerformed(const Control& source, int actionId)
 			__isBtActivating = true;
 			ShowWaitPopup(L"Activating bluetooth...");
 			r = __btManager.Activate();
-			ShowBluetoothScanForm();
+			//ShowBluetoothScanForm();	// Need to be paired in advance by setting panel
+			ShowBluetoothDebugForm();	// Need to be paired in advance by setting panel
 		}
 		break;
 	case ID_BUTTON_ACTIVATE:
@@ -732,6 +812,23 @@ MainForm::OnBluetoothDeactivated(result r)
 	__isBtDeactivating = false;
 	static_cast<CheckButton*>(__controlList.GetAt(ButtonActionType::BT_ON_OFF))->SetSelected(false);
 }
+
+#if 0
+void MainForm::OnSppConnectionResponded (result r)
+{
+	AppLog("OnSppConnectionResponded: r=%d", r);
+}
+
+void MainForm::OnSppDataReceived (Tizen::Base::ByteBuffer &buffer)
+{
+	AppLog("OnSppDataReceived:");
+}
+
+void MainForm::OnSppDisconnected (result r)
+{
+	AppLog("OnSppDisconnected: r=%d", r);
+}
+#endif
 
 void
 MainForm::UpdateControl(void)
