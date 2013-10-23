@@ -21,6 +21,7 @@ class BluetoothDebugForm
 	, public Tizen::Net::Bluetooth::IBluetoothManagerEventListener
 	, public Tizen::Net::Bluetooth::IBluetoothDeviceEventListener
 	, public Tizen::Net::Bluetooth::IBluetoothSppInitiatorEventListener
+	, public Tizen::Net::Bluetooth::IBluetoothSppAcceptorEventListener
 {
 		enum ControlType { CONTROL_EDIT_FILED,
 		                   CONTROL_BUTTON,
@@ -57,9 +58,14 @@ public:
 	virtual void OnSppDataReceived(Tizen::Base::ByteBuffer &buffer);
 	virtual void OnSppDisconnected(result r);
 
+	// IBluetoothSppInitiatorEventListener
+	virtual void OnSppConnectionRequested(const Tizen::Net::Bluetooth::BluetoothDevice &device);
+
 private:
 	// Button constant
-    static const int ID_BUTTON_PING = 1000;
+    static const int ID_BUTTON_CONNECT = 1000;
+    static const int ID_BUTTON_ACCEPTOR = 1001;
+    static const int ID_BUTTON_PING = 1002;
     static const int ID_BUTTON_GOFORWARD = 1008;
 	static const int ID_OPTION_DONE = 100;
     Tizen::Base::Collection::ArrayList __controlList;
@@ -68,6 +74,7 @@ private:
 	bool __isBtKBTConnectionResponded;
 	Tizen::Net::Bluetooth::BluetoothManager __btManager;
 	Tizen::Net::Bluetooth::BluetoothSppInitiator __sppInitiator;
+	Tizen::Net::Bluetooth::BluetoothSppAcceptor __sppAcceptor;
 
 	Tizen::Base::Collection::ArrayList __foundDeviceList;
 	Tizen::Ui::Controls::ListView* __pDisplayDeviceListView;
@@ -75,6 +82,8 @@ private:
 	bool AddMainControl(ControlType type, const Tizen::Base::String& text, int firstActionId = -1, int secondActionId = -1);
 	void ShowTimeoutMessageBox(const Tizen::Base::String& title, const Tizen::Base::String& text, unsigned long timeout);
 
+	result Connect_KBT1();
+	result Initialize_SppAcceptor();
 	result KBT1_Ping();
 	result KBT1_GoForward();
 };

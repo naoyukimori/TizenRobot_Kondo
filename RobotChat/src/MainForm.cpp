@@ -86,72 +86,7 @@ MainForm::Initialize(void)
 		AppLog("BluetoothManager::Construct() [Error].");
 		return false;
 	}
-#if 0
-	{
-		String localName = __btManager.GetLocalDeviceName();
-		String localAddress = __btManager.GetLocalDeviceAddress(); // For example: "00:3D:47:EF:8A:03"
-		AppLog("Bluetooth: localName=%S.\n", localName.GetPointer());
-		AppLog("Bluetooth: localAddress=%S.\n", localAddress.GetPointer());
-		{
-			IList* pPairedDeviceList = __btManager.GetPairedDeviceListN();
-			// Get the paired device element at the index 0
-			for ( int i=0; i< pPairedDeviceList->GetCount(); i++) {
-				BluetoothDevice* pPairedDevice = (BluetoothDevice*)pPairedDeviceList->GetAt(i);
-				// Get information from the paired device
-				String pairedDeviceName = pPairedDevice->GetName();
-				AppLog("Bluetooth: paired(%d): %S.\n", i, pairedDeviceName.GetPointer());
-			}
-			pPairedDeviceList->RemoveAll(true); // Clear resources after use to prevent memory leaks
 
-			delete pPairedDeviceList;
-		}
-	}
-#endif
-#if 0
-	{
-		//BluetoothSppInitiator sppInitiator;
-		// The application must implement the IBluetoothSppInitiatorEventListener interface
-		__sppInitiator.Construct(*this);
-
-		if (__btManager.IsActivated() == false)
-		   __btManager.Activate();
-
-		{
-			IList* pPairedDeviceList = __btManager.GetPairedDeviceListN();
-			// Get the paired device element at the index 0
-			for ( int i=0; i< pPairedDeviceList->GetCount(); i++) {
-				BluetoothDevice* pPairedDevice = (BluetoothDevice*)pPairedDeviceList->GetAt(i);
-				// Get information from the paired device
-				String pairedDeviceName = pPairedDevice->GetName();
-				if ( pairedDeviceName == "KBT-1" || pairedDeviceName == "KBT-1-2") {
-					AppLog("Bluetooth: found paired %S in list. trying to connect...\n", pairedDeviceName.GetPointer());
-					//Connect to the SPP acceptor.
-					if (__sppInitiator.Connect(*pPairedDevice) == E_SUCCESS) {
-						__isBtKBTReady = true;
-						AppLog("Bluetooth: %S connected!\n", pairedDeviceName.GetPointer());
-						break;
-					}
-				}
-			}
-			pPairedDeviceList->RemoveAll(true); // Clear resources after use to prevent memory leaks
-			delete pPairedDeviceList;
-			if (!__isBtKBTReady) {
-				AppLog("Bluetooth: KBT-1 not found or not connected!");
-				return true;
-			}
-		}
-
-		//Send data when the connection is established:
-		//ByteBuffer sendBuffer;
-		//sendBuffer.SetByte('A');
-		//__sppInitiator.SendData(sendBuffer);
-		//sendTextMsg = ['0x04', '0xFE', '0x06', '0x08' ];	// ping command
-
-		//Disconnect from the SPP acceptor:
-		//sppInitiator.Disconnect();
-
-	}
-#endif
 	__btManager.SetBluetoothDeviceListener(this);
 
 	return true;

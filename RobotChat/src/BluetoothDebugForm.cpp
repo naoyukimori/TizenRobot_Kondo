@@ -20,8 +20,7 @@ using namespace Tizen::Net::Bluetooth;
 
 BluetoothDebugForm::BluetoothDebugForm()
 	: __isBtKBTReady(false)
-	, __isBtKBTConnectionResponded(false)
-{
+	, __isBtKBTConnectionResponded(false){
 
 }
 
@@ -60,6 +59,8 @@ BluetoothDebugForm::Initialize(void)
 		pFooter->AddActionEventListener(*this);
 	}
 
+	AddMainControl(CONTROL_BUTTON, L"Connect", ID_BUTTON_CONNECT);
+	AddMainControl(CONTROL_BUTTON, L"Acceptor", ID_BUTTON_ACCEPTOR);
 	AddMainControl(CONTROL_BUTTON, L"Ping", ID_BUTTON_PING);
 	AddMainControl(CONTROL_BUTTON, L"Go Forward", ID_BUTTON_GOFORWARD);
 	//AddPopup();
@@ -81,7 +82,7 @@ BluetoothDebugForm::Initialize(void)
 
 	__btManager.SetBluetoothDeviceListener(this);
 
-#if 1
+#if 0
 	// list Bluetooth info
 	{
 		String localName = __btManager.GetLocalDeviceName();
@@ -103,38 +104,6 @@ BluetoothDebugForm::Initialize(void)
 		}
 	}
 #endif
-
-	{
-		// The application must implement the IBluetoothSppInitiatorEventListener interface
-		if (!IsFailed(__sppInitiator.Construct(*this)))
-		{
-			IList* pPairedDeviceList = __btManager.GetPairedDeviceListN();
-			// Get the paired device element at the index 0
-			for ( int i=0; i< pPairedDeviceList->GetCount(); i++) {
-				BluetoothDevice* pPairedDevice = (BluetoothDevice*)pPairedDeviceList->GetAt(i);
-				// Get information from the paired device
-				String pairedDeviceName = pPairedDevice->GetName();
-				if ( pairedDeviceName == "KBT-1" || pairedDeviceName == "KBT-1-2") {
-					AppLog("Bluetooth: found paired %S in list. trying to connect...\n", pairedDeviceName.GetPointer());
-					//Connect to the SPP acceptor.
-					if (!IsFailed(__sppInitiator.Connect(*pPairedDevice))) {
-						__isBtKBTReady = true;
-						AppLog("Bluetooth: %S connected!\n", pairedDeviceName.GetPointer());
-						break;
-					}
-				}
-			}
-			pPairedDeviceList->RemoveAll(true); // Clear resources after use to prevent memory leaks
-			delete pPairedDeviceList;
-			if (!__isBtKBTReady) {
-				AppLog("Bluetooth: KBT-1 not found or not connected!");
-				return true;
-			}
-		}
-
-		//Disconnect from the SPP acceptor:
-		//sppInitiator.Disconnect();
-	}
 
 	return true;
 }
@@ -159,17 +128,13 @@ BluetoothDebugForm::OnActionPerformed(const Control& source, int actionId)
 	}
 		break;
 
-	case ID_BUTTON_PING:
-	{
-		KBT1_Ping();
-	}
-		break;
+	case ID_BUTTON_CONNECT: Connect_KBT1();	break;
 
-	case ID_BUTTON_GOFORWARD:
-	{
-		KBT1_GoForward();
-	}
-		break;
+	case ID_BUTTON_ACCEPTOR: Initialize_SppAcceptor();break;
+
+	case ID_BUTTON_PING: KBT1_Ping(); break;
+
+	case ID_BUTTON_GOFORWARD: KBT1_GoForward();	break;
 
 	default:
 		break;
@@ -249,6 +214,65 @@ BluetoothDebugForm::AddMainControl(ControlType type, const String& text, int fir
 }
 
 
+result
+BluetoothDebugForm::Connect_KBT1()
+{
+
+	{
+		// The application must implement the IBluetoothSppInitiatorEventListener interface
+		if (!IsFailed(__sppInitiator.Construct(*this)))
+		{
+			IList* pPairedDeviceList = __btManager.GetPairedDeviceListN();
+			// Get the paired device element at the index 0
+			for ( int i=0; i< pPairedDeviceList->GetCount(); i++) {
+				BluetoothDevice* pPairedDevice = (BluetoothDevice*)pPairedDeviceList->GetAt(i);
+				// Get information from the paired device
+				String pairedDeviceName = pPairedDevice->GetName();
+				if ( pairedDeviceName == "KBT-1" || pairedDeviceName == "KBT-1-2" || pairedDeviceName == "Tizen" || pairedDeviceName == "Tizen2" || pairedDeviceName == "Tizen3") {
+					AppLog("Bluetooth: found paired %S in list. trying to connect...\n", pairedDeviceName.GetPointer());
+					//Connect to the SPP acceptor.
+					if (!IsFailed(__sppInitiator.Connect(*pPairedDevice))) {
+						__isBtKBTReady = true;
+						AppLog("Bluetooth: %S connected!\n", pairedDeviceName.GetPointer());
+						break;
+					}
+				}
+			}
+			pPairedDeviceList->RemoveAll(true); // Clear resources after use to prevent memory leaks
+			delete pPairedDeviceList;
+			if (!__isBtKBTReady) {
+				AppLog("Bluetooth: KBT-1 not found or not connected!");
+				return E_FAILURE;
+			}
+		}
+
+		//Disconnect from the SPP acceptor:
+		//sppInitiator.Disconnect();
+	}
+
+	return E_SUCCESS;
+}
+
+result
+BluetoothDebugForm::Initialize_SppAcceptor()
+{
+
+	{
+		// The application must implement the IBluetoothSppInitiatorEventListener interface
+		if (!IsFailed(__sppAcceptor.Construct(*this)))
+		{
+
+			if (IsFailed(__sppAcceptor.StartService())) {
+				AppLog("Bluetooth: Cannot start SPP Acceptor service!");
+				return E_FAILURE;
+			}
+		}
+
+	}
+
+	return E_SUCCESS;
+}
+
 void
 BluetoothDebugForm::OnSceneActivatedN(const SceneId &previousSceneId, const SceneId &currentSceneId, IList *pArgs)
 {
@@ -279,6 +303,12 @@ void BluetoothDebugForm::OnSppConnectionResponded(result r)
 	if (!IsFailed(r)) __isBtKBTConnectionResponded = true;
 }
 
+void BluetoothDebugForm::OnSppConnectionRequested(const Tizen::Net::Bluetooth::BluetoothDevice &device)
+{
+	AppLog("OnSppConnectionRequested:");	// E_SYSTEM = -1610609822 =
+	int r = __sppAcceptor.AcceptConnection();
+}
+
 void BluetoothDebugForm::OnSppDataReceived(Tizen::Base::ByteBuffer &buffer)
 {
 	AppLog("OnSppDataReceived: len=%d, %S", buffer.GetLimit(), buffer.GetPointer());
@@ -296,17 +326,20 @@ BluetoothDebugForm::KBT1_Ping()
 	result r = E_SUCCESS;
 	//Send data when the connection is established:
 	ByteBuffer sendBuffer;
-	sendBuffer.Construct(100);
 	//sendTextMsg = ['0x04', '0xFE', '0x06', '0x08' ];	// ping command
-	byte b;
-	b = 0x04; sendBuffer.SetByte(b);
-	b = 0xfe; sendBuffer.SetByte(b);
-	b = 0x06; sendBuffer.SetByte(b);
-	b = 0x08; sendBuffer.SetByte(b);
+	//byte b;
+	//b = 0x04; sendBuffer.SetByte(b);
+	//b = 0xfe; sendBuffer.SetByte(b);
+	//b = 0x06; sendBuffer.SetByte(b);
+	//b = 0x08; sendBuffer.SetByte(b);
+	byte b[4] = { 0x04, 0xfe, 0x06, 0x08 };		// ping command; request ack
+	int len = sizeof(b);
+	sendBuffer.Construct(sizeof(b));
+	sendBuffer.SetArray(b, 0, sizeof(b));
 	sendBuffer.Flip();
 	r = __sppInitiator.SendData(sendBuffer);
 
-	AppLogIf(!IsFailed(r), "KBT1_Ping: send OK");
+	AppLogIf(!IsFailed(r), "KBT1_Ping: send OK, %dbytes", len);
 	AppLogIf( IsFailed(r), "KBT1_Ping: send failed");
 
 	// Receive by OnSppDataReceived
@@ -321,16 +354,10 @@ BluetoothDebugForm::KBT1_GoForward()
 	//Send data when the connection is established:
 	ByteBuffer sendBuffer;
 	sendBuffer.Construct(100);
-	//sendTextMsg = ['80 00 01 40 40 40 40 01' ];	// NumPad8; go forward?? now work
-	//sendTextMsg = ['07 0f 00 01 ac 0d d0' ];	// Move single servo ICS 0 to poition 3500
-	byte b;
-	b = 0x07; sendBuffer.SetByte(b);
-	b = 0x0f; sendBuffer.SetByte(b);
-	b = 0x00; sendBuffer.SetByte(b);
-	b = 0x01; sendBuffer.SetByte(b);
-	b = 0xac; sendBuffer.SetByte(b);
-	b = 0x0d; sendBuffer.SetByte(b);
-	b = 0xd0; sendBuffer.SetByte(b);
+	//byte b[]= { 0x07, 0x0f, 0x00, 0x01, 0xac, 0x0d, 0xd0 };	// Move single servo ICS 0 to poition 3500
+	byte b[]= { 'a', 'b', 'c', 'd' };	// test ascii data
+	sendBuffer.SetArray(b, 0, sizeof(b));
+	sendBuffer.Flip();
 	r = __sppInitiator.SendData(sendBuffer);
 
 	AppLogIf(!IsFailed(r), "KBT1_MoveICS1: send OK");
