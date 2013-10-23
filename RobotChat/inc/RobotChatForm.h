@@ -49,8 +49,8 @@ public:
 	                                const Tizen::Ui::Scenes::SceneId &nextSceneId){}
 
 	// INetConnectionEventListener
-	virtual void OnNetConnectionStarted(Tizen::Net::NetConnection& netConnection, result r) {}
-	virtual void OnNetConnectionStopped(Tizen::Net::NetConnection& netConnection, result r) {}
+	virtual void OnNetConnectionStarted(Tizen::Net::NetConnection& netConnection, result r);
+	virtual void OnNetConnectionStopped(Tizen::Net::NetConnection& netConnection, result r);
 	virtual void OnNetConnectionSuspended(Tizen::Net::NetConnection& netConnection) {};
 	virtual void OnNetConnectionResumed(Tizen::Net::NetConnection& netConnection) {};
 
@@ -89,6 +89,7 @@ private:
 	std::unique_ptr<Tizen::Media::Player> __pPlayer;
 	std::unique_ptr<Tizen::Ui::Controls::OverlayRegion> __pOverlay;
 
+	result InitializeChatSocket(void);
 	result StartVideoWithVideoEventListener(String filePath);
 };
 

@@ -31,6 +31,7 @@ RobotChatForm::RobotChatForm()
 	, __pWifiDirectDevice(null)
 	, __pNetConnection(null)
 	, __pUdpSocket(null)
+	, __chatPortNumber(0)
 	, __pPlayer(null)
 	, __pOverlay(null)
 {
@@ -91,8 +92,6 @@ RobotChatForm::OnInitializing(void)
 		return E_FAILURE;
 	}
 
-	StartVideoWithVideoEventListener(L"");
-
 	return E_SUCCESS;
 }
 
@@ -138,6 +137,80 @@ RobotChatForm::OnSceneActivatedN(const SceneId &previousSceneId, const SceneId &
     RequestRedraw();
 }
 
+result
+RobotChatForm::InitializeChatSocket(void)
+{
+	result r = E_SUCCESS;
+	Ip4Address localAddr(L"0");  // IN_ADDR_ANY
+	NetEndPoint localEndPoint(localAddr, __chatPortNumber);
+
+	__pUdpSocket = new Socket();
+
+	r = __pUdpSocket->Construct(*__pNetConnection, NET_SOCKET_AF_IPV4, NET_SOCKET_TYPE_DATAGRAM, NET_SOCKET_PROTOCOL_UDP);
+	TryReturn(r == E_SUCCESS, r, "[%s] Sokcet Construct Failed", GetErrorMessage(r));
+
+	r = __pUdpSocket->SetSockOpt(NET_SOCKET_SOL_SOCKET, NET_SOCKET_SO_BROADCAST, 1);
+	TryReturn(r == E_SUCCESS, r, "[%s] SetSockOpt Failed", GetErrorMessage(r));
+
+	r = __pUdpSocket->AddSocketListener(*(ISocketEventListener*) this);
+	TryReturn(r == E_SUCCESS, r, "[%s] AddSocketListener Failed", GetErrorMessage(r));
+
+	r = __pUdpSocket->AsyncSelectByListener(NET_SOCKET_EVENT_READ | NET_SOCKET_EVENT_WRITE | NET_SOCKET_EVENT_CLOSE);
+	TryReturn(r == E_SUCCESS, r, "[%s] AsyncSelectByListener Failed", GetErrorMessage(r));
+
+	r = __pUdpSocket->Bind(localEndPoint);
+	TryReturn(r == E_SUCCESS, r, "[%s] UDP socket Bind Failed", GetErrorMessage(r));
+
+	return r;
+}
+
+
+void
+RobotChatForm::OnNetConnectionStarted(NetConnection& netConnection, result r)
+{
+	SceneManager* pSceneManager = SceneManager::GetInstance();
+	AppAssert(pSceneManager);
+
+	if (r == E_SUCCESS)
+	{
+		if (netConnection.GetNetConnectionInfo() && netConnection.GetNetConnectionInfo()->GetLocalAddress())
+		{
+			__localIpAddress = netConnection.GetNetConnectionInfo()->GetLocalAddress()->ToString();
+		}
+
+		r = InitializeChatSocket();
+		if (IsFailed(r))
+		{
+			AppLog("Failed to create socket. [%s]", GetErrorMessage(r));
+			pSceneManager->GoBackward(BackwardSceneTransition());
+		}
+	}
+	else
+	{
+		AppLog("Net Connection Failed. [%s]", GetErrorMessage(r));
+		pSceneManager->GoBackward(BackwardSceneTransition());
+	}
+
+}
+
+void
+RobotChatForm::OnNetConnectionStopped(NetConnection& netConnection, result r)
+{
+    if (__pUdpSocket)
+    {
+        __pUdpSocket->Close();
+        __pUdpSocket->RemoveSocketListener(*(ISocketEventListener*) this);
+        delete __pUdpSocket;
+        __pUdpSocket = null;
+    }
+
+	SceneManager* pSceneManager = SceneManager::GetInstance();
+	AppAssert(pSceneManager);
+
+	pSceneManager->GoForward(ForwardSceneTransition(SCENE_MAIN_FORM, SCENE_TRANSITION_ANIMATION_TYPE_NONE,
+	                        SCENE_HISTORY_OPTION_NO_HISTORY, SCENE_DESTROY_OPTION_DESTROY));
+}
+
 void
 RobotChatForm::OnSocketReadyToReceive(Socket& socket)
 {
@@ -146,6 +219,8 @@ RobotChatForm::OnSocketReadyToReceive(Socket& socket)
 	unsigned long arg = 0;
 	Ip4Address ip4Address("0"); //ADDR_ANY
 	String deviceName(L"");
+
+	StartVideoWithVideoEventListener(L"");
 
 	r = socket.Ioctl(NET_SOCKET_FIONREAD, arg);
 	TryReturnVoid(r == E_SUCCESS, "Socket ioctl for read is failed");
@@ -187,6 +262,12 @@ RobotChatForm::OnSocketReadyToReceive(Socket& socket)
 	{
 
 	}
+
+	if (message.Contains(L"test"))
+	{
+		StartVideoWithVideoEventListener(L"");
+	}
+
 }
 
 /*
