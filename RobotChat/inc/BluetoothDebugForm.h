@@ -21,7 +21,6 @@ class BluetoothDebugForm
 	, public Tizen::Net::Bluetooth::IBluetoothManagerEventListener
 	, public Tizen::Net::Bluetooth::IBluetoothSppInitiatorEventListener
 	, public Tizen::Net::Bluetooth::IBluetoothSppAcceptorEventListener
-	, public Tizen::Base::Runtime::ITimerEventListener
 {
 		enum ControlType { CONTROL_EDIT_FILED,
 		                   CONTROL_BUTTON,
@@ -57,7 +56,6 @@ public:
 	// IBluetoothSppInitiatorEventListener
 	virtual void OnSppConnectionRequested(const Tizen::Net::Bluetooth::BluetoothDevice &device);
 
-    virtual void OnTimerExpired(Tizen::Base::Runtime::Timer &timer);
 
 private:
 	// Button constant
@@ -71,6 +69,7 @@ private:
     static const int ID_BUTTON_PLAYMOTION_3 = 2003;
     static const int ID_BUTTON_PLAYMOTION_4 = 2004;
     static const int ID_BUTTON_PLAYMOTION_5 = 2005;
+    static const int ID_BUTTON_PLAYMOTION_6 = 2006;
 	static const int ID_OPTION_DONE = 100;
     Tizen::Base::Collection::ArrayList __controlList;
 
@@ -89,7 +88,7 @@ private:
 	int robotState;		// unused
 	byte RCRCB4_calc_checksum(byte *cmd, int len);
 	result Connect_KBT1();
-	result DisConnect_KBT1();
+	result Disconnect_KBT1();
 	result Initialize_SppAcceptor();
 	result KBT1_Ping();
 	result KBT1_Move_Head();

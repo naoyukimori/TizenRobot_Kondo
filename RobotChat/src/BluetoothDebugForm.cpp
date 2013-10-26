@@ -17,7 +17,6 @@ using namespace Tizen::Graphics;
 using namespace Tizen::Ui;
 using namespace Tizen::Ui::Scenes;
 using namespace Tizen::Net::Bluetooth;
-using namespace Tizen::Base::Runtime;
 
 
 BluetoothDebugForm::BluetoothDebugForm()
@@ -33,6 +32,7 @@ BluetoothDebugForm::~BluetoothDebugForm(void)
 		//Disconnect from the SPP acceptor:
 		__sppInitiator.Disconnect();
 		__isBtKBTReady = false;
+		__btManager.Deactivate();
 	}
 }
 
@@ -65,13 +65,14 @@ BluetoothDebugForm::Initialize(void)
 	AddMainControl(CONTROL_BUTTON, L"Connect", ID_BUTTON_CONNECT);
 	AddMainControl(CONTROL_BUTTON, L"Disconnect", ID_BUTTON_DISCONNECT);
 	//AddMainControl(CONTROL_BUTTON, L"Acceptor", ID_BUTTON_ACCEPTOR);
-	AddMainControl(CONTROL_BUTTON, L"Ping", ID_BUTTON_PING);
+	//AddMainControl(CONTROL_BUTTON, L"Ping", ID_BUTTON_PING);
 	AddMainControl(CONTROL_BUTTON, L"Move Head", ID_BUTTON_MOVE_HEAD);
 	AddMainControl(CONTROL_BUTTON, L"Play Motion 1", ID_BUTTON_PLAYMOTION_1);
 	AddMainControl(CONTROL_BUTTON, L"Play Motion 2", ID_BUTTON_PLAYMOTION_2);
 	AddMainControl(CONTROL_BUTTON, L"Play Motion 3", ID_BUTTON_PLAYMOTION_3);
 	AddMainControl(CONTROL_BUTTON, L"Play Motion 4", ID_BUTTON_PLAYMOTION_4);
 	AddMainControl(CONTROL_BUTTON, L"Play Motion 5", ID_BUTTON_PLAYMOTION_5);
+	AddMainControl(CONTROL_BUTTON, L"Play Motion 6", ID_BUTTON_PLAYMOTION_6);
 	//AddPopup();
 
 	SetFormBackEventListener(this);
@@ -117,7 +118,6 @@ BluetoothDebugForm::Initialize(void)
 	//AddPopup();
 
 	SetFormBackEventListener(this);
-	__timer.Construct(*this);
 
 	return true;
 }
@@ -143,7 +143,7 @@ BluetoothDebugForm::OnActionPerformed(const Control& source, int actionId)
 		break;
 
 	case ID_BUTTON_CONNECT: Connect_KBT1();	break;
-	case ID_BUTTON_DISCONNECT: DisConnect_KBT1();	break;
+	case ID_BUTTON_DISCONNECT: Disconnect_KBT1();	break;
 	case ID_BUTTON_ACCEPTOR: Initialize_SppAcceptor();break;
 	case ID_BUTTON_PING: KBT1_Ping(); break;
 	case ID_BUTTON_MOVE_HEAD: KBT1_Move_Head();	break;
@@ -268,14 +268,12 @@ BluetoothDebugForm::Connect_KBT1()
 		}
 	}
 
-	//__timer.StartAsRepeatable(10000);		// timer to check robot status
-
 	return E_SUCCESS;
 }
 
 
 result
-BluetoothDebugForm::DisConnect_KBT1()
+BluetoothDebugForm::Disconnect_KBT1()
 {
 	//Disconnect from the SPP acceptor:
 	result r = __sppInitiator.Disconnect();
@@ -343,12 +341,6 @@ void BluetoothDebugForm::OnSppDisconnected(result r)
 }
 
 
-void BluetoothDebugForm::OnTimerExpired(Timer& timer)
-{
-	return;
-}
-
-
 byte
 RCB4_calc_checksum(byte *cmd, int len)
 {
@@ -358,6 +350,7 @@ RCB4_calc_checksum(byte *cmd, int len)
 }
 
 
+/* send request ack command to KBT-1/RCB4 */
 result
 BluetoothDebugForm::KBT1_Ping()
 {
@@ -386,6 +379,7 @@ BluetoothDebugForm::KBT1_Ping()
 }
 
 
+/* send head move command to KBT1/RCB4 */
 result
 BluetoothDebugForm::KBT1_Move_Head()
 {
@@ -405,6 +399,7 @@ BluetoothDebugForm::KBT1_Move_Head()
 }
 
 
+/* send play motion command to KBT1/RCB4 */
 result
 BluetoothDebugForm::KBT1_PlayMotion(int index)
 {
@@ -466,14 +461,16 @@ BluetoothDebugForm::KBT1_PlayMotion(int index)
 
 /* Tizen 2.2 Bluetooth stack patch
  *  Issue: Tizen OS Bluetooth SPP Initiator cannot pass binary data.
+ *  following patch fix above limitation.
+ *
  * /rpmbuild/BUILD/bluetooth-frwk-0.2.57/bt-service/
  *  rpmbuild -bb --target=arm ./bluetooth-frwk.spec
  *
- * patch source and build
+ * Patch source and build
  *  bt-api/bt-rfcomm-client.c: bluetooth_rfcomm_write(): change g_strlcpy() to memcpy()
  *  bt-service/bt-service-rfcomm-client.c: _bt_rfcomm_write(): remove lines of g_utf8_validate() and new_length
  *
- * replace binary. same file in this project
+ * Recompile or replace binary. File in this project
  *  /usr/lib/libbluetooth-api.so.1.0.0: c819fd967b6a6f5b3639820eee9d066f
  *  /usr/bin/bt-service: b7d5ec3cee3fd135d6270d013ff0d11a
  */
