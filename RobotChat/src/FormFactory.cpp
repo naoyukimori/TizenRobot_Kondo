@@ -24,7 +24,6 @@
 #include "ChatPortConfigurationForm.h"
 #include "DeviceInfoForm.h"
 #include "WpsConfigurationModeForm.h"
-#include "BluetoothScanForm.h"
 #include "BluetoothDebugForm.h"
 
 using namespace Tizen::Ui::Scenes;
@@ -134,13 +133,6 @@ FormFactory::CreateFormN(const String& formId, const SceneId& sceneId)
         pSceneManager->AddSceneEventListener(sceneId, *pForm);
         pNewForm = pForm;
     }
-	else if (formId == FORM_BLUETOOTH_SCAN)
-	{
-		BluetoothScanForm* pForm = new (std::nothrow) BluetoothScanForm();
-		pForm->Initialize();
-		pSceneManager->AddSceneEventListener(sceneId, *pForm);
-		pNewForm = pForm;
-	}
 	else if (formId == FORM_BLUETOOTH_DEBUG)
 	{
 		BluetoothDebugForm* pForm = new (std::nothrow) BluetoothDebugForm();

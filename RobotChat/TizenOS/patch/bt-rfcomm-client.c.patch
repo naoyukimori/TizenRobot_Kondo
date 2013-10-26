@@ -1,0 +1,11 @@
+--- bluetooth-frwk-0.2.57/bt-api/bt-rfcomm-client.c.org	2013-10-26 15:07:07.225263814 +0900
++++ bluetooth-frwk-0.2.57/bt-api/bt-rfcomm-client.c	2013-10-26 20:35:52.495265904 +0900
+@@ -139,7 +139,7 @@
+ 
+ 	buffer = g_malloc0(length + 1);
+ 
+-	g_strlcpy(buffer, buf, length + 1);
++	memcpy(buffer, buf, length + 1);
+ 
+ 	g_array_append_vals(in_param1, &fd, sizeof(int));
+ 	g_array_append_vals(in_param2, &length, sizeof(int));

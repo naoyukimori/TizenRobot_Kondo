@@ -1,0 +1,26 @@
+--- bluetooth-frwk-0.2.57/bt-service/bt-service-rfcomm-client.c.org	2013-10-26 15:56:45.140000611 +0900
++++ bluetooth-frwk-0.2.57/bt-service/bt-service-rfcomm-client.c	2013-10-26 20:36:51.225265933 +0900
+@@ -635,23 +635,10 @@
+ {
+ 	int wbytes = 0;
+ 	int written;
+-	int new_length;
+ 	char *ptr = NULL;
+ 
+ 	retv_if(buf == NULL, BLUETOOTH_ERROR_INVALID_PARAM);
+ 
+-	/* Check the utf8 validation & Fill the NULL in the invalid location*/
+-	if (!g_utf8_validate(buf, -1, (const char **)&ptr))
+-		*ptr = '\0';
+-	
+-	/* After calling g_utf8_validate, it is possible to be NULL */
+-	retv_if(buf == NULL, BLUETOOTH_ERROR_INVALID_PARAM);
+-
+-	new_length = strlen(buf);
+-	if (new_length < length) {
+-		length = new_length;
+-	}
+-
+ 	/*some times user may send huge data */
+ 	while (wbytes < length) {
+ 		written = write(socket_fd, buf + wbytes,

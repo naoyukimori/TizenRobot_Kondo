@@ -19,13 +19,17 @@ class BluetoothDebugForm
 	, public Tizen::Ui::Controls::IFormBackEventListener
 	, public Tizen::Ui::Scenes::ISceneEventListener
 	, public Tizen::Net::Bluetooth::IBluetoothManagerEventListener
-	, public Tizen::Net::Bluetooth::IBluetoothDeviceEventListener
 	, public Tizen::Net::Bluetooth::IBluetoothSppInitiatorEventListener
 	, public Tizen::Net::Bluetooth::IBluetoothSppAcceptorEventListener
+	, public Tizen::Base::Runtime::ITimerEventListener
 {
 		enum ControlType { CONTROL_EDIT_FILED,
 		                   CONTROL_BUTTON,
 		                   CONTROL_CHECK_BUTTON_STYLE_RADIO};
+		enum RobotCurrentState { ROBOT_STATE_IDLE,
+		                    ROBOT_STATE_IN_MOTION,
+		                    ROBOT_STATE_UNKNOWN };
+
 public:
 	BluetoothDebugForm(void);
 	virtual ~BluetoothDebugForm(void);
@@ -45,14 +49,6 @@ public:
 	virtual void OnBluetoothActivated(result r) {}
 	virtual void OnBluetoothDeactivated(result r) {}
 
-	// from IBluetoothDeviceEventListener
-	virtual void OnBluetoothDiscoveryDone(bool isCompleted);
-	virtual void OnBluetoothDiscoveryStarted(result r);
-	virtual void OnBluetoothPaired(const Tizen::Net::Bluetooth::BluetoothDevice& pairedDevice){}
-	virtual void OnBluetoothRemoteDeviceFoundN(Tizen::Net::Bluetooth::BluetoothDevice* pFoundDevice);
-	virtual void OnBluetoothServiceListReceived(const Tizen::Net::Bluetooth::BluetoothDevice& targetDevice, unsigned long serviceList, result r){}
-	virtual void OnBluetoothUnpaired(const Tizen::Net::Bluetooth::BluetoothDevice& unpairedDevice){}
-
 	// IBluetoothSppInitiatorEventListener
 	virtual void OnSppConnectionResponded(result r);
 	virtual void OnSppDataReceived(Tizen::Base::ByteBuffer &buffer);
@@ -61,31 +57,43 @@ public:
 	// IBluetoothSppInitiatorEventListener
 	virtual void OnSppConnectionRequested(const Tizen::Net::Bluetooth::BluetoothDevice &device);
 
+    virtual void OnTimerExpired(Tizen::Base::Runtime::Timer &timer);
+
 private:
 	// Button constant
     static const int ID_BUTTON_CONNECT = 1000;
-    static const int ID_BUTTON_ACCEPTOR = 1001;
-    static const int ID_BUTTON_PING = 1002;
-    static const int ID_BUTTON_GOFORWARD = 1008;
+    static const int ID_BUTTON_DISCONNECT = 1001;
+    static const int ID_BUTTON_ACCEPTOR = 1002;
+    static const int ID_BUTTON_PING = 1010;
+    static const int ID_BUTTON_MOVE_HEAD = 1100;
+    static const int ID_BUTTON_PLAYMOTION_1 = 2001;
+    static const int ID_BUTTON_PLAYMOTION_2 = 2002;
+    static const int ID_BUTTON_PLAYMOTION_3 = 2003;
+    static const int ID_BUTTON_PLAYMOTION_4 = 2004;
+    static const int ID_BUTTON_PLAYMOTION_5 = 2005;
 	static const int ID_OPTION_DONE = 100;
     Tizen::Base::Collection::ArrayList __controlList;
 
-	bool __isBtKBTReady;
-	bool __isBtKBTConnectionResponded;
+	bool __isBtKBTReady;		// true if bluetooth is activated
+	bool __isSppConstructed;	// ture if spp stack ready
+	bool __isBtKBTConnectionResponded;		// true if connection established
 	Tizen::Net::Bluetooth::BluetoothManager __btManager;
 	Tizen::Net::Bluetooth::BluetoothSppInitiator __sppInitiator;
 	Tizen::Net::Bluetooth::BluetoothSppAcceptor __sppAcceptor;
 
-	Tizen::Base::Collection::ArrayList __foundDeviceList;
-	Tizen::Ui::Controls::ListView* __pDisplayDeviceListView;
+	Tizen::Base::Runtime::Timer __timer;
 
 	bool AddMainControl(ControlType type, const Tizen::Base::String& text, int firstActionId = -1, int secondActionId = -1);
 	void ShowTimeoutMessageBox(const Tizen::Base::String& title, const Tizen::Base::String& text, unsigned long timeout);
 
+	int robotState;		// unused
+	byte RCRCB4_calc_checksum(byte *cmd, int len);
 	result Connect_KBT1();
+	result DisConnect_KBT1();
 	result Initialize_SppAcceptor();
 	result KBT1_Ping();
-	result KBT1_GoForward();
+	result KBT1_Move_Head();
+	result KBT1_PlayMotion(int index);	/* 0 to n */
 };
 
 

@@ -1070,6 +1070,7 @@ MainForm::Connect(const WifiDirectDeviceInfo& remoteDeviceInfo)
     }
     return r;
 }
+
 result
 MainForm::Disconnect(const WifiDirectDeviceInfo& peerDeviceInfo)
 {

@@ -17,11 +17,14 @@ using namespace Tizen::Graphics;
 using namespace Tizen::Ui;
 using namespace Tizen::Ui::Scenes;
 using namespace Tizen::Net::Bluetooth;
+using namespace Tizen::Base::Runtime;
+
 
 BluetoothDebugForm::BluetoothDebugForm()
-	: __isBtKBTReady(false)
-	, __isBtKBTConnectionResponded(false){
-
+	: __isSppConstructed(false)
+	, __isBtKBTReady(false)
+	, __isBtKBTConnectionResponded(false)
+	, robotState(ROBOT_STATE_UNKNOWN) {
 }
 
 BluetoothDebugForm::~BluetoothDebugForm(void)
@@ -60,9 +63,15 @@ BluetoothDebugForm::Initialize(void)
 	}
 
 	AddMainControl(CONTROL_BUTTON, L"Connect", ID_BUTTON_CONNECT);
-	AddMainControl(CONTROL_BUTTON, L"Acceptor", ID_BUTTON_ACCEPTOR);
+	AddMainControl(CONTROL_BUTTON, L"Disconnect", ID_BUTTON_DISCONNECT);
+	//AddMainControl(CONTROL_BUTTON, L"Acceptor", ID_BUTTON_ACCEPTOR);
 	AddMainControl(CONTROL_BUTTON, L"Ping", ID_BUTTON_PING);
-	AddMainControl(CONTROL_BUTTON, L"Go Forward", ID_BUTTON_GOFORWARD);
+	AddMainControl(CONTROL_BUTTON, L"Move Head", ID_BUTTON_MOVE_HEAD);
+	AddMainControl(CONTROL_BUTTON, L"Play Motion 1", ID_BUTTON_PLAYMOTION_1);
+	AddMainControl(CONTROL_BUTTON, L"Play Motion 2", ID_BUTTON_PLAYMOTION_2);
+	AddMainControl(CONTROL_BUTTON, L"Play Motion 3", ID_BUTTON_PLAYMOTION_3);
+	AddMainControl(CONTROL_BUTTON, L"Play Motion 4", ID_BUTTON_PLAYMOTION_4);
+	AddMainControl(CONTROL_BUTTON, L"Play Motion 5", ID_BUTTON_PLAYMOTION_5);
 	//AddPopup();
 
 	SetFormBackEventListener(this);
@@ -80,7 +89,7 @@ BluetoothDebugForm::Initialize(void)
 		return false;
 	}
 
-	__btManager.SetBluetoothDeviceListener(this);
+	//__btManager.SetBluetoothDeviceListener(this);
 
 #if 0
 	// list Bluetooth info
@@ -104,6 +113,11 @@ BluetoothDebugForm::Initialize(void)
 		}
 	}
 #endif
+
+	//AddPopup();
+
+	SetFormBackEventListener(this);
+	__timer.Construct(*this);
 
 	return true;
 }
@@ -129,12 +143,15 @@ BluetoothDebugForm::OnActionPerformed(const Control& source, int actionId)
 		break;
 
 	case ID_BUTTON_CONNECT: Connect_KBT1();	break;
-
+	case ID_BUTTON_DISCONNECT: DisConnect_KBT1();	break;
 	case ID_BUTTON_ACCEPTOR: Initialize_SppAcceptor();break;
-
 	case ID_BUTTON_PING: KBT1_Ping(); break;
-
-	case ID_BUTTON_GOFORWARD: KBT1_GoForward();	break;
+	case ID_BUTTON_MOVE_HEAD: KBT1_Move_Head();	break;
+	case ID_BUTTON_PLAYMOTION_1: KBT1_PlayMotion(1);	break;
+	case ID_BUTTON_PLAYMOTION_2: KBT1_PlayMotion(2);	break;
+	case ID_BUTTON_PLAYMOTION_3: KBT1_PlayMotion(3);	break;
+	case ID_BUTTON_PLAYMOTION_4: KBT1_PlayMotion(4);	break;
+	case ID_BUTTON_PLAYMOTION_5: KBT1_PlayMotion(5);	break;
 
 	default:
 		break;
@@ -218,9 +235,13 @@ result
 BluetoothDebugForm::Connect_KBT1()
 {
 
+	if (!__isSppConstructed) {
+		if (!IsFailed(__sppInitiator.Construct(*this))) __isSppConstructed = true;
+	}
 	{
 		// The application must implement the IBluetoothSppInitiatorEventListener interface
-		if (!IsFailed(__sppInitiator.Construct(*this)))
+		//if (!IsFailed(__sppInitiator.Construct(*this)))
+		if ( !__isBtKBTConnectionResponded )
 		{
 			IList* pPairedDeviceList = __btManager.GetPairedDeviceListN();
 			// Get the paired device element at the index 0
@@ -228,7 +249,7 @@ BluetoothDebugForm::Connect_KBT1()
 				BluetoothDevice* pPairedDevice = (BluetoothDevice*)pPairedDeviceList->GetAt(i);
 				// Get information from the paired device
 				String pairedDeviceName = pPairedDevice->GetName();
-				if ( pairedDeviceName == "KBT-1" || pairedDeviceName == "KBT-1-2" || pairedDeviceName == "Tizen" || pairedDeviceName == "Tizen2" || pairedDeviceName == "Tizen3") {
+				if (  pairedDeviceName == "KBT-1" || pairedDeviceName == "KBT-1-2" /* || pairedDeviceName == "Tizen" || pairedDeviceName == "Tizen2" || pairedDeviceName == "Tizen3" */ ) {
 					AppLog("Bluetooth: found paired %S in list. trying to connect...\n", pairedDeviceName.GetPointer());
 					//Connect to the SPP acceptor.
 					if (!IsFailed(__sppInitiator.Connect(*pPairedDevice))) {
@@ -245,12 +266,22 @@ BluetoothDebugForm::Connect_KBT1()
 				return E_FAILURE;
 			}
 		}
-
-		//Disconnect from the SPP acceptor:
-		//sppInitiator.Disconnect();
 	}
 
+	//__timer.StartAsRepeatable(10000);		// timer to check robot status
+
 	return E_SUCCESS;
+}
+
+
+result
+BluetoothDebugForm::DisConnect_KBT1()
+{
+	//Disconnect from the SPP acceptor:
+	result r = __sppInitiator.Disconnect();
+	__isBtKBTReady = false;
+
+	return r;
 }
 
 result
@@ -279,24 +310,6 @@ BluetoothDebugForm::OnSceneActivatedN(const SceneId &previousSceneId, const Scen
 
 }
 
-void
-BluetoothDebugForm::OnBluetoothDiscoveryDone(bool isCompleted)
-{
-
-}
-
-void
-BluetoothDebugForm::OnBluetoothDiscoveryStarted(result r)
-{
-
-}
-
-void
-BluetoothDebugForm::OnBluetoothRemoteDeviceFoundN(Tizen::Net::Bluetooth::BluetoothDevice* pFoundDevice)
-{
-
-}
-
 void BluetoothDebugForm::OnSppConnectionResponded(result r)
 {
 	AppLog("OnSppConnectionResponded: r=%d", r);	// E_SYSTEM = -1610609822 =
@@ -311,7 +324,16 @@ void BluetoothDebugForm::OnSppConnectionRequested(const Tizen::Net::Bluetooth::B
 
 void BluetoothDebugForm::OnSppDataReceived(Tizen::Base::ByteBuffer &buffer)
 {
-	AppLog("OnSppDataReceived: len=%d, %S", buffer.GetLimit(), buffer.GetPointer());
+	AppLog("OnSppDataReceived: len=%d", buffer.GetLimit() /*, buffer.GetPointer() */);
+	if (buffer.GetLimit() == 4) {	// possible response from RCB4 vir KBT-1
+		byte res[4];
+		buffer.GetArray(res, 0, 4);
+		if (res[2] == 0x06) {
+			AppLog("ACK Received from KBT-1");
+		} else if ( res[2] == 0x15) {
+			AppLog("NAK Received from KBT-1");
+		}
+	}
 }
 
 void BluetoothDebugForm::OnSppDisconnected(result r)
@@ -320,26 +342,43 @@ void BluetoothDebugForm::OnSppDisconnected(result r)
 	__isBtKBTConnectionResponded = false;
 }
 
+
+void BluetoothDebugForm::OnTimerExpired(Timer& timer)
+{
+	return;
+}
+
+
+byte
+RCB4_calc_checksum(byte *cmd, int len)
+{
+	byte sum = 0;
+	for ( int i = 0; i < len; i++) sum += cmd[i];
+	return sum;
+}
+
+
 result
 BluetoothDebugForm::KBT1_Ping()
 {
 	result r = E_SUCCESS;
-	//Send data when the connection is established:
 	ByteBuffer sendBuffer;
-	//sendTextMsg = ['0x04', '0xFE', '0x06', '0x08' ];	// ping command
+	//byte b[] = { 0x0d, 0x00, 0x02, 0x50, 0x03, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x63 };	// HTH KRC Num8
+	//byte b2[]= { 0x0d, 0x00, 0x02, 0x50, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x62 };	// HTH KRC Num8
+	//byte b[]= { 'a', 'b', 'c', 'd' };	// test ascii data
+	//byte b[]= {  0x80, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x01 };	// Num8 by KRC commander?
 	//byte b;
 	//b = 0x04; sendBuffer.SetByte(b);
 	//b = 0xfe; sendBuffer.SetByte(b);
 	//b = 0x06; sendBuffer.SetByte(b);
 	//b = 0x08; sendBuffer.SetByte(b);
 	byte b[4] = { 0x04, 0xfe, 0x06, 0x08 };		// ping command; request ack
-	int len = sizeof(b);
 	sendBuffer.Construct(sizeof(b));
 	sendBuffer.SetArray(b, 0, sizeof(b));
 	sendBuffer.Flip();
 	r = __sppInitiator.SendData(sendBuffer);
 
-	AppLogIf(!IsFailed(r), "KBT1_Ping: send OK, %dbytes", len);
+	AppLogIf(!IsFailed(r), "KBT1_Ping: send OK");
 	AppLogIf( IsFailed(r), "KBT1_Ping: send failed");
 
 	// Receive by OnSppDataReceived
@@ -348,21 +387,110 @@ BluetoothDebugForm::KBT1_Ping()
 
 
 result
-BluetoothDebugForm::KBT1_GoForward()
+BluetoothDebugForm::KBT1_Move_Head()
 {
 	result r = E_SUCCESS;
-	//Send data when the connection is established:
+	byte RCB4_cmd_Move_Head[]= { 0x07, 0x0f, 0x00, 0x01, 0xac, 0x0d, 0xd0 };	// Move single servo ICS 0 to poition 3500
 	ByteBuffer sendBuffer;
-	sendBuffer.Construct(100);
-	//byte b[]= { 0x07, 0x0f, 0x00, 0x01, 0xac, 0x0d, 0xd0 };	// Move single servo ICS 0 to poition 3500
-	byte b[]= { 'a', 'b', 'c', 'd' };	// test ascii data
-	sendBuffer.SetArray(b, 0, sizeof(b));
+	sendBuffer.Construct(sizeof(RCB4_cmd_Move_Head));
+	sendBuffer.SetArray(RCB4_cmd_Move_Head, 0, sizeof(RCB4_cmd_Move_Head));
 	sendBuffer.Flip();
 	r = __sppInitiator.SendData(sendBuffer);
 
-	AppLogIf(!IsFailed(r), "KBT1_MoveICS1: send OK");
-	AppLogIf( IsFailed(r), "KBT1_MoveICS1: send failed");
+	AppLogIf(!IsFailed(r), "KBT1_Move_Head: send OK");
+	AppLogIf( IsFailed(r), "KBT1_Move_Head: send failed");
+
+	// Response should be receive by OnSppDataReceived
+	return r;
+}
+
+
+result
+BluetoothDebugForm::KBT1_PlayMotion(int index)
+{
+	result r = E_SUCCESS;
+	byte RCB4_cmd_suspend_motion[] = { 0x09, 0x00, 0x02, 0x00, 0x00, 0x00, 0x10, 0x83, 0x9e };		// suspend motion
+	byte RCB4_cmd_reset_state[] = { 0x11, 0x00, 0x02, 0x02, 0x00, 0x00, 0x4b, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x64 };	// reset program counter and EEPROM refresh flag
+	byte RCB4_cmd_set_move_address[] = { 0x07, 0x0c, 0xb8, 0x0b, 0x00, 0x00, 0xd6 };		// set move address by call instruction
+	byte RCB4_cmd_start_motion[] = { 0x09, 0x00, 0x02, 0x00, 0x00, 0x00, 0x1b, 0x83, 0xa9 };		// restart motion
+
+	ByteBuffer sendBuffer;
+	sendBuffer.Construct(256);
+
+	// suspend motion
+	sendBuffer.SetArray(RCB4_cmd_suspend_motion, 0, sizeof(RCB4_cmd_suspend_motion));
+	sendBuffer.Flip();
+	r = __sppInitiator.SendData(sendBuffer);
+
+	// reset state
+	sendBuffer.Clear();
+	sendBuffer.SetArray(RCB4_cmd_reset_state, 0, sizeof(RCB4_cmd_reset_state));
+	sendBuffer.Flip();
+	r |= __sppInitiator.SendData(sendBuffer);
+
+	// set move address
+	//  calculate start address
+	unsigned long motion_addr;
+	motion_addr = 3000 + 2048*(index-1);	// For HeartToHeart V2.0, V2.1 only
+	RCB4_cmd_set_move_address[2] = motion_addr & 0xff;
+	RCB4_cmd_set_move_address[3] = (motion_addr >>  8) & 0xff;
+	RCB4_cmd_set_move_address[4] = (motion_addr >> 16) & 0xff;
+	RCB4_cmd_set_move_address[sizeof(RCB4_cmd_set_move_address)-1] = RCB4_calc_checksum(RCB4_cmd_set_move_address, sizeof(RCB4_cmd_set_move_address)-1);
+	sendBuffer.Clear();
+	sendBuffer.SetArray(RCB4_cmd_set_move_address, 0, sizeof(RCB4_cmd_set_move_address));
+	sendBuffer.Flip();
+	r |= __sppInitiator.SendData(sendBuffer);
+
+	// start motion
+	sendBuffer.Clear();
+	sendBuffer.SetArray(RCB4_cmd_start_motion, 0, sizeof(RCB4_cmd_start_motion));
+	sendBuffer.Flip();
+	r |= __sppInitiator.SendData(sendBuffer);
+
+	AppLogIf(!IsFailed(r), "KBT1_PlayMotion(%d): send OK", index);
+	AppLogIf( IsFailed(r), "KBT1_PlayMotion(%d): send failed", index);
 
 	// Receive by OnSppDataReceived
 	return r;
 }
+
+
+
+/* Kondo KHR-4HV memo
+ *  Dual USB adapter HS cable configuration
+ *   Pin 1: Rx(White), 2: Tx(Red), 3: G(Black)
+ *
+ *  KBT-1 SW configuration; RCB-4 slave mode
+ *   SW1: ON-OFF, SW2: OFF-ON
+ */
+
+/* Tizen 2.2 Bluetooth stack patch
+ *  Issue: Tizen OS Bluetooth SPP Initiator cannot pass binary data.
+ * /rpmbuild/BUILD/bluetooth-frwk-0.2.57/bt-service/
+ *  rpmbuild -bb --target=arm ./bluetooth-frwk.spec
+ *
+ * patch source and build
+ *  bt-api/bt-rfcomm-client.c: bluetooth_rfcomm_write(): change g_strlcpy() to memcpy()
+ *  bt-service/bt-service-rfcomm-client.c: _bt_rfcomm_write(): remove lines of g_utf8_validate() and new_length
+ *
+ * replace binary. same file in this project
+ *  /usr/lib/libbluetooth-api.so.1.0.0: c819fd967b6a6f5b3639820eee9d066f
+ *  /usr/bin/bt-service: b7d5ec3cee3fd135d6270d013ff0d11a
+ */
+
+/*
+ * patch
+--- bluetooth-frwk-0.2.57/bt-api/bt-rfcomm-client.c.org 2013-10-26 15:07:07.225263814 +0900
++++ bluetooth-frwk-0.2.57/bt-api/bt-rfcomm-client.c     2013-10-26 20:35:52.495265904 +0900
+@@ -139,7 +139,7 @@
+
+        buffer = g_malloc0(length + 1);
+
+-       g_strlcpy(buffer, buf, length + 1);
++       memcpy(buffer, buf, length + 1);
+
+        g_array_append_vals(in_param1, &fd, sizeof(int));
+        g_array_append_vals(in_param2, &length, sizeof(int));
+
+
+ */
