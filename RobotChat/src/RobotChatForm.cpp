@@ -22,7 +22,6 @@ using namespace Tizen::Graphics;
 using namespace Tizen::Base::Collection;
 using namespace Tizen::Base::Utility;
 using namespace Tizen::Ui::Scenes;
-using namespace Tizen::Media;
 
 RobotChatForm::RobotChatForm()
 	: __localIpAddress()
@@ -32,18 +31,33 @@ RobotChatForm::RobotChatForm()
 	, __pNetConnection(null)
 	, __pUdpSocket(null)
 	, __chatPortNumber(0)
-	, __pPlayer(null)
-	, __pOverlay(null)
 {
 
 }
 
 RobotChatForm::~RobotChatForm()
 {
-	delete __pUdpSocket;
-	delete __pNetConnection;
-
-	__pPlayer->Close();
+	if (__pUdpSocket)
+	{
+		__pUdpSocket->Close();
+		__pUdpSocket->RemoveSocketListener(*(ISocketEventListener*) this);
+		delete __pUdpSocket;
+		__pUdpSocket = null;
+	}
+	if (__pNetConnection)
+	{
+		if (__pNetConnection->Stop() == E_SUCCESS)
+		{
+			// Do something here.
+		}
+		else
+		{
+			AppLog("Failed to Stop NetConnection");
+		}
+		__pNetConnection->RemoveNetConnectionListener(*(INetConnectionEventListener*) this);
+		delete __pNetConnection;
+		__pNetConnection = null;
+	}
 }
 
 bool
@@ -81,16 +95,10 @@ RobotChatForm::Initialize(void)
 result
 RobotChatForm::OnInitializing(void)
 {
+	result r = E_SUCCESS;
 	SetOrientation(ORIENTATION_LANDSCAPE);
 
 	SetFormBackEventListener(this);
-
-	__pPlayer.reset(new (std::nothrow) Player());
-	if ( __pPlayer.get() == null)
-	{
-		AppLogException("pPlayer = new (std::nothrow) Player() has failed");
-		return E_FAILURE;
-	}
 
 	return E_SUCCESS;
 }
@@ -98,21 +106,10 @@ RobotChatForm::OnInitializing(void)
 void
 RobotChatForm::OnFormBackRequested(Form& source)
 {
-	if (__pNetConnection != null)
-	{
-		if (__pNetConnection->Stop() == E_SUCCESS)
-		{
-			// Do something here.
-		}
-		else
-		{
-			AppLog("Failed to Stop NetConnection");
-		}
-		SceneManager* pSceneManager = SceneManager::GetInstance();
-		AppAssert(pSceneManager);
+	SceneManager* pSceneManager = SceneManager::GetInstance();
+	AppAssert(pSceneManager);
 
-		pSceneManager->GoBackward(BackwardSceneTransition());
-	}
+	pSceneManager->GoBackward(BackwardSceneTransition());
 }
 
 void
@@ -220,8 +217,6 @@ RobotChatForm::OnSocketReadyToReceive(Socket& socket)
 	Ip4Address ip4Address("0"); //ADDR_ANY
 	String deviceName(L"");
 
-	StartVideoWithVideoEventListener(L"");
-
 	r = socket.Ioctl(NET_SOCKET_FIONREAD, arg);
 	TryReturnVoid(r == E_SUCCESS, "Socket ioctl for read is failed");
 
@@ -263,93 +258,17 @@ RobotChatForm::OnSocketReadyToReceive(Socket& socket)
 
 	}
 
-	if (message.Contains(L"test"))
+	String* tmpStr;
+	if (message.Contains(L"sample"))
 	{
-		StartVideoWithVideoEventListener(L"");
+		tmpStr = new String(L"sample.mp4");
+	}
+	else
+	{
+		tmpStr = new String(L"S-1.mp4");
 	}
 
-}
-
-/*
-void
-RobotChatForm::CreateOverlayRegion(void)
-{
-	bool modified = false;
-	bool isValidRect = false;
-	Rectangle rect = GetClientAreaBounds();
-
-	__pPanel.reset(Tizen::Ui::Controls::Form::GetOverlayRegionN(rect, OVERLAY_REGION_TYPE_NORMAL));
-	TryReturn(__pPanel.get() != null, ,"GetOverlayRegion Failed");
-	AppLog("__pPanel : %s", GetErrorMessage(GetLastResult()));
-	__pPanel->Show();
-}
-*/
-
-result
-RobotChatForm::StartVideoWithVideoEventListener(String path)
-{
-	result r = E_SUCCESS;
-    Rectangle rect = GetClientAreaBounds();
-    String filePath = Tizen::App::App::GetInstance()->GetAppRootPath() + L"res/Video/sampleH264.mp4";
-
-    r = __pPlayer->Construct(*this, *this);
-    if (IsFailed(r))
-    {
-        return r;
-    }
-
-    r = __pPlayer->OpenFile(filePath);
-    if (IsFailed(r))
-    {
-    	return r;
-    }
-
-    // Gets OverlayRegion from this Form
-    __pOverlay.reset(Tizen::Ui::Controls::Form::GetOverlayRegionN(rect, OVERLAY_REGION_TYPE_NORMAL));
-    if (__pOverlay == null)
-    {
-    	return GetLastResult();
-    }
-
-    r = __pPlayer->Play();
-    if (IsFailed(r))
-    {
-    	return r;
-    }
-
-    return E_SUCCESS;
-}
-
-void
-RobotChatForm::OnVideoFrameDecoded(Player &src, BitmapPixelFormat bitmapPixelFormat, const Dimension &dim,
-										const byte *pBuffer, int sizeOfBuffer, result r)
-{
-    ByteBuffer buf;
-    OverlayRegionBufferPixelFormat overlayPixelFormat;
-
-    if (IsFailed(r))
-    {
-        return;
-    }
-
-    if (__pOverlay == null)
-    {
-        return;
-    }
-
-    if (bitmapPixelFormat == BITMAP_PIXEL_FORMAT_ARGB8888)
-    {
-        overlayPixelFormat = OVERLAY_REGION_BUFFER_PIXEL_FORMAT_ARGB8888;
-    }
-    else if (bitmapPixelFormat == BITMAP_PIXEL_FORMAT_RGB565)
-    {
-        overlayPixelFormat = OVERLAY_REGION_BUFFER_PIXEL_FORMAT_RGB565;
-    }
-    else // Unsupported pixel format
-    {
-        return;
-    }
-
-    buf.Construct(pBuffer, 0, sizeOfBuffer, sizeOfBuffer);
-    __pOverlay->SetInputBuffer(buf, dim, overlayPixelFormat);
+	ArrayList* pArgs = new ArrayList();
+	pArgs->Add(tmpStr);
+	SceneManager::GetInstance()->GoForward(ForwardSceneTransition(SCENE_VIDEO_FORM), pArgs);
 }

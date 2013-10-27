@@ -11,13 +11,11 @@
 #include <FBase.h>
 #include <FUi.h>
 #include <FNet.h>
-#include <FMedia.h>
 
 using namespace Tizen::Base;
 using namespace Tizen::Graphics;
 using namespace Tizen::Ui;
 using namespace Tizen::Ui::Controls;
-using namespace Tizen::Media;
 
 class RobotChatForm
 	: public Tizen::Ui::Controls::Form
@@ -25,8 +23,6 @@ class RobotChatForm
 	, public Tizen::Ui::Scenes::ISceneEventListener
 	, public Tizen::Net::INetConnectionEventListener
 	, public Tizen::Net::Sockets::ISocketEventListener
-	, public Tizen::Media::IPlayerEventListener
-	, public Tizen::Media::IPlayerVideoEventListener
 {
 public:
 	RobotChatForm(void);
@@ -61,20 +57,6 @@ public:
 	virtual void OnSocketReadyToSend(Tizen::Net::Sockets::Socket& socket) {}
 	virtual void OnSocketAccept(Tizen::Net::Sockets::Socket& socket) {}
 
-	// IPlayerEventListener
-	virtual void OnPlayerOpened(result r){}
-	virtual void OnPlayerEndOfClip(void){}
-	virtual void OnPlayerBuffering(int percent){}
-	virtual void OnPlayerErrorOccurred(Tizen::Media::PlayerErrorReason r){}
-	virtual void OnPlayerInterrupted(void){}
-	virtual void OnPlayerReleased(void){}
-	virtual void OnPlayerSeekCompleted(result r){}
-	virtual void OnPlayerAudioFocusChanged(void){}
-
-	// IPlayerVideoEventListener
-	virtual void OnVideoFrameDecoded(Player &src, BitmapPixelFormat bitmapPixelFormat, const Dimension &dim,
-	                                      const byte *pBuffer, int sizeOfBuffer, result r);
-
 private:
 	Tizen::Base::String __localIpAddress;
 	Tizen::Base::String __localDeviceName;
@@ -86,11 +68,7 @@ private:
 
 	int __chatPortNumber;
 
-	std::unique_ptr<Tizen::Media::Player> __pPlayer;
-	std::unique_ptr<Tizen::Ui::Controls::OverlayRegion> __pOverlay;
-
 	result InitializeChatSocket(void);
-	result StartVideoWithVideoEventListener(String filePath);
 };
 
 

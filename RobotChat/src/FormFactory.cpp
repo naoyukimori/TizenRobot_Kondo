@@ -21,6 +21,7 @@
 #include "DeviceListForm.h"
 #include "ChatForm.h"
 #include "RobotChatForm.h"
+#include "VideoForm.h"
 #include "ChatPortConfigurationForm.h"
 #include "DeviceInfoForm.h"
 #include "WpsConfigurationModeForm.h"
@@ -39,6 +40,7 @@ const wchar_t* FORM_PEER_DEVICE_LIST = L"Form_GroupMemberDeviecList";
 const wchar_t* FORM_CHAT_MEMBER_DEVICE_LIST = L"Form_ChatMemberDeviceList";
 const wchar_t* FORM_CHAT = L"Form_Chat";
 const wchar_t* FORM_ROBOT_CHAT = L"Form_RobotChat";
+const wchar_t* FORM_VIDEO = L"Form_Video";
 const wchar_t* FORM_CHAT_PORT_CONFIGURATION = L"Form_ChatPortConfiguration";
 const wchar_t* FORM_WPS_CONFIGURATION_MODE = L"Form_WpsConfigurationMode";
 const wchar_t* FORM_BLUETOOTH_SCAN = L"Form_BluetoothScan";
@@ -115,6 +117,13 @@ FormFactory::CreateFormN(const String& formId, const SceneId& sceneId)
 	else if (formId == FORM_ROBOT_CHAT)
 	{
 		RobotChatForm* pForm = new (std::nothrow) RobotChatForm();
+		pForm->Initialize();
+		pSceneManager->AddSceneEventListener(sceneId, *pForm);
+		pNewForm = pForm;
+	}
+	else if (formId == FORM_VIDEO)
+	{
+		VideoForm* pForm = new (std::nothrow) VideoForm();
 		pForm->Initialize();
 		pSceneManager->AddSceneEventListener(sceneId, *pForm);
 		pNewForm = pForm;
