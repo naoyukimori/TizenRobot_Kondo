@@ -16,12 +16,14 @@ using namespace Tizen::Net;
 using namespace Tizen::Net::Wifi;
 using namespace Tizen::Net::Sockets;
 using namespace Tizen::App;
+using namespace Tizen::Io;
 using namespace Tizen::Ui;
 using namespace Tizen::Ui::Controls;
 using namespace Tizen::Graphics;
 using namespace Tizen::Base::Collection;
 using namespace Tizen::Base::Utility;
 using namespace Tizen::Ui::Scenes;
+using namespace Tizen::Web::Json;
 
 RobotChatForm::RobotChatForm()
 	: __localIpAddress()
@@ -57,6 +59,13 @@ RobotChatForm::~RobotChatForm()
 		__pNetConnection->RemoveNetConnectionListener(*(INetConnectionEventListener*) this);
 		delete __pNetConnection;
 		__pNetConnection = null;
+	}
+
+	if (_pPatterns)
+	{
+		_pPatterns->RemoveAll();
+		delete _pPatterns;
+		_pPatterns = null;
 	}
 }
 
@@ -109,13 +118,51 @@ RobotChatForm::Initialize(void)
 	return true;
 }
 
+void
+RobotChatForm::GeneratePattern(void)
+{
+	File file;
+	String filePath = App::GetInstance()->GetAppDataPath() + L"patterns.json";
+
+	//Read File Content into buffer
+	result r = file.Construct(filePath, L"r");
+	TryReturnVoid(r == E_SUCCESS, "file construction failure with [%s]", GetErrorMessage(r));
+
+	FileAttributes att;
+	r = File::GetAttributes(filePath, att);
+	TryReturnVoid(r == E_SUCCESS, "file GetAttributes failure with [%s]", GetErrorMessage(r));
+
+	long long size = att.GetFileSize();
+	TryReturnVoid(size > 0, "file does not contain valid data, size of file [%ld]", size);
+
+	ByteBuffer buf;
+	r = buf.Construct(size + 1);
+	TryReturnVoid(r == E_SUCCESS, "bytebuffer construct failure with [%s]", GetErrorMessage(r));
+
+	r = file.Read(buf);
+	TryReturnVoid(r == E_SUCCESS, "file read failure with [%s]", GetErrorMessage(r));
+
+	_pPatterns->RemoveAll(true);
+	//Call Json Parser
+	IJsonValue* pJson = JsonParser::ParseN(buf);
+	JsonObject* pObject = static_cast< JsonObject* >(pJson);
+	IMapEnumeratorT< const String*, IJsonValue* >* pMapEnum = pObject->GetMapEnumeratorN();
+
+	return;
+
+CATCH:
+	return;
+}
+
 result
 RobotChatForm::OnInitializing(void)
 {
-	result r = E_SUCCESS;
 	SetOrientation(ORIENTATION_LANDSCAPE);
 
 	SetFormBackEventListener(this);
+
+	_pPatterns = new (std::nothrow) ArrayList();
+	_pPatterns->Construct();
 
 	return E_SUCCESS;
 }

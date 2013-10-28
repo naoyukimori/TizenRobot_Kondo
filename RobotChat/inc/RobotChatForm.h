@@ -9,11 +9,15 @@
 #define ROBOTCHATFORM_H_
 
 #include <FBase.h>
+#include <FIo.h>
 #include <FUi.h>
 #include <FNet.h>
+#include <FWebJson.h>
 #include "KBT1Controller.h"
+#include "Pattern.h"
 
 using namespace Tizen::Base;
+using namespace Tizen::Base::Collection;
 using namespace Tizen::Graphics;
 using namespace Tizen::Ui;
 using namespace Tizen::Ui::Controls;
@@ -33,6 +37,8 @@ public:
 	bool Initialize(void);
 
 	void ShowMessageBox(const Tizen::Base::String& title, const Tizen::Base::String& text);
+
+	void GeneratePattern(void);
 
 	// Form
 	virtual result OnInitializing(void);
@@ -73,6 +79,8 @@ private:
 
 	int __chatPortNumber;
 	KBT1Controller kbt;
+
+	ArrayList* _pPatterns;
 
 	result InitializeChatSocket(void);
 };

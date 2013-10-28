@@ -1,0 +1,21 @@
+{"Robot patterns": [
+	    {
+			"name": "S-1",
+			"type": "Shopping",
+			"description": "Shopping pattern 1",
+			"filename": "S-1.mp4",
+			"duration": 1000,
+			"motion": 1,
+			"delay":0
+		},
+		{
+			"name": "S-2",
+			"type": "Shopping",
+			"description": "Shopping pattern 2",
+			"filename": "S-2.mp4",
+			"duration": 1000,
+			"motion": 1,
+			"delay":0
+		}
+	]
+}
