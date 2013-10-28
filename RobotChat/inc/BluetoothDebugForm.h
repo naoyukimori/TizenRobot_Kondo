@@ -13,6 +13,23 @@
 #include <FUi.h>
 #include <FNet.h>
 
+
+namespace ButtonActionType2
+{
+    enum Enum { CONNECT,
+    			DISCONNECT,
+    			MOVE_HEAD,
+    			PLAY_MOTION_1,
+    			PLAY_MOTION_2,
+    			PLAY_MOTION_3,
+    			PLAY_MOTION_4,
+    			PLAY_MOTION_5,
+    			PLAY_MOTION_6,
+    			PLAY_MOTION_7,
+    			PLAY_MOTION_8,
+               };
+}
+
 class BluetoothDebugForm
 	: public Tizen::Ui::Controls::Form
 	, public Tizen::Ui::IActionEventListener
@@ -70,6 +87,8 @@ private:
     static const int ID_BUTTON_PLAYMOTION_4 = 2004;
     static const int ID_BUTTON_PLAYMOTION_5 = 2005;
     static const int ID_BUTTON_PLAYMOTION_6 = 2006;
+    static const int ID_BUTTON_PLAYMOTION_7 = 2007;
+    static const int ID_BUTTON_PLAYMOTION_8 = 2008;
 	static const int ID_OPTION_DONE = 100;
     Tizen::Base::Collection::ArrayList __controlList;
 
@@ -80,13 +99,11 @@ private:
 	Tizen::Net::Bluetooth::BluetoothSppInitiator __sppInitiator;
 	Tizen::Net::Bluetooth::BluetoothSppAcceptor __sppAcceptor;
 
-	Tizen::Base::Runtime::Timer __timer;
-
 	bool AddMainControl(ControlType type, const Tizen::Base::String& text, int firstActionId = -1, int secondActionId = -1);
 	void ShowTimeoutMessageBox(const Tizen::Base::String& title, const Tizen::Base::String& text, unsigned long timeout);
 
 	int robotState;		// unused
-	byte RCRCB4_calc_checksum(byte *cmd, int len);
+	byte RCB4_calc_checksum(byte *cmd, int len);
 	result Connect_KBT1();
 	result Disconnect_KBT1();
 	result Initialize_SppAcceptor();

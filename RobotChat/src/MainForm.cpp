@@ -41,9 +41,9 @@ MainForm::MainForm(void)
 	, __currentState(STATE_ACTIVATED)
 	, __isWiifDirectSupported(true)
 	, __isWifiDeactivating(false)
-	, __isBtActivating(false)
-	, __isBtDeactivating(false)
-	//, __isBtKBTReady(false)
+	, __robotSideMode(true)
+	//, __isBtActivating(false)
+	//, __isBtDeactivating(false)
 {
 }
 
@@ -80,6 +80,7 @@ MainForm::Initialize(void)
 
 	__wifiManager.Construct(*this);
 
+#if 0
 	// Bluetooth initialize section
 	if (IsFailed(__btManager.Construct(*this)))
 	{
@@ -88,6 +89,7 @@ MainForm::Initialize(void)
 	}
 
 	__btManager.SetBluetoothDeviceListener(this);
+#endif
 
 	return true;
 }
@@ -127,7 +129,7 @@ MainForm::OnInitializing(void)
 		return E_SUCCESS;
 	}
 	TryReturn(UpdateCurrentState()== true, E_FAILURE, "Failed to initialize the current state");
-	AddMainControl(CONTROL_CHECK_BUTTON_STYLE_RADIO, L"Bluetooth", ID_BUTTON_BLUETOOTH_TOGGLED, ID_BUTTON_BLUETOOTH_TOGGLED);
+	AddMainControl(CONTROL_CHECK_BUTTON_STYLE_RADIO, L"Robot Side", ID_BUTTON_BLUETOOTH_TOGGLED, ID_BUTTON_BLUETOOTH_TOGGLED);
 	AddMainControl(CONTROL_CHECK_BUTTON_STYLE_RADIO, L"Wi-Fi Direct", ID_BUTTON_ACTIVATE, ID_BUTTON_DEACTIVATE);
 	AddMainControl(CONTROL_EDIT_FILED, L"Device Name");
 	AddMainControl(CONTROL_BUTTON, L"Connect", ID_BUTTON_CONNECT);
@@ -142,11 +144,14 @@ MainForm::OnInitializing(void)
 	UpdateLocalDeviceName();
 	UpdateControl();
 
-	if (__btManager.IsActivated())
+	//if (__btManager.IsActivated())
+	if (__robotSideMode)
 	{
 		static_cast<CheckButton*>(__controlList.GetAt(ButtonActionType::BT_ON_OFF))->SetSelected(true);
 		static_cast<Button*>(__controlList.GetAt(ButtonActionType::START_CHAT))->SetEnabled(true);
 	}
+
+
 	return E_SUCCESS;
 }
 
@@ -370,6 +375,7 @@ MainForm::OnActionPerformed(const Control& source, int actionId)
 	switch (actionId)
 	{
 	case ID_BUTTON_BLUETOOTH_TOGGLED:
+#if 0
 		if (__btManager.IsActivated())
 		{
 			__isBtDeactivating = true;
@@ -384,6 +390,14 @@ MainForm::OnActionPerformed(const Control& source, int actionId)
 			//ShowBluetoothScanForm();	// Need to be paired in advance by setting panel
 			ShowBluetoothDebugForm();	// Need to be paired in advance by setting panel
 		}
+#endif
+		if ( __robotSideMode ){
+			__robotSideMode = false;
+		} else {
+			__robotSideMode = true;
+			ShowBluetoothDebugForm();	// Need to be paired in advance by setting panel
+		}
+
 		break;
 	case ID_BUTTON_ACTIVATE:
 		if (__wifiManager.IsActivated())
@@ -457,7 +471,8 @@ MainForm::OnActionPerformed(const Control& source, int actionId)
         }
         break;
 	case ID_BUTTON_START_CHAT:
-		if (__btManager.IsActivated())
+		//if (__btManager.IsActivated())
+		if (__robotSideMode)
 			ShowRobotChatForm();
 		else
 			ShowChatForm();
@@ -733,6 +748,7 @@ MainForm::OnSceneDeactivated(const SceneId &currentSceneId, const SceneId &nextS
 {
 }
 
+#if 0
 void
 MainForm::OnBluetoothActivated(result r)
 {
@@ -749,6 +765,7 @@ MainForm::OnBluetoothDeactivated(result r)
 	__isBtDeactivating = false;
 	static_cast<CheckButton*>(__controlList.GetAt(ButtonActionType::BT_ON_OFF))->SetSelected(false);
 }
+#endif
 
 #if 0
 void MainForm::OnSppConnectionResponded (result r)

@@ -32,8 +32,8 @@ BluetoothDebugForm::~BluetoothDebugForm(void)
 		//Disconnect from the SPP acceptor:
 		__sppInitiator.Disconnect();
 		__isBtKBTReady = false;
-		__btManager.Deactivate();
 	}
+	__btManager.Deactivate();
 }
 
 bool
@@ -73,6 +73,8 @@ BluetoothDebugForm::Initialize(void)
 	AddMainControl(CONTROL_BUTTON, L"Play Motion 4", ID_BUTTON_PLAYMOTION_4);
 	AddMainControl(CONTROL_BUTTON, L"Play Motion 5", ID_BUTTON_PLAYMOTION_5);
 	AddMainControl(CONTROL_BUTTON, L"Play Motion 6", ID_BUTTON_PLAYMOTION_6);
+	AddMainControl(CONTROL_BUTTON, L"Play Motion 7", ID_BUTTON_PLAYMOTION_7);
+	AddMainControl(CONTROL_BUTTON, L"Play Motion 8", ID_BUTTON_PLAYMOTION_8);
 	//AddPopup();
 
 	SetFormBackEventListener(this);
@@ -86,8 +88,10 @@ BluetoothDebugForm::Initialize(void)
 
 	if (!__btManager.IsActivated())
 	{
-		ShowTimeoutMessageBox(L"Bluetooth Scan", L"Please Activate Bluetooth", 3000);
-		return false;
+		__btManager.Activate();
+		//ShowWaitPopup(L"Activating bluetooth...");
+		//ShowTimeoutMessageBox(L"Bluetooth Scan", L"Please Activate Bluetooth", 3000);
+		//return false;
 	}
 
 	//__btManager.SetBluetoothDeviceListener(this);
@@ -114,8 +118,6 @@ BluetoothDebugForm::Initialize(void)
 		}
 	}
 #endif
-
-	//AddPopup();
 
 	SetFormBackEventListener(this);
 
@@ -152,6 +154,9 @@ BluetoothDebugForm::OnActionPerformed(const Control& source, int actionId)
 	case ID_BUTTON_PLAYMOTION_3: KBT1_PlayMotion(3);	break;
 	case ID_BUTTON_PLAYMOTION_4: KBT1_PlayMotion(4);	break;
 	case ID_BUTTON_PLAYMOTION_5: KBT1_PlayMotion(5);	break;
+	case ID_BUTTON_PLAYMOTION_6: KBT1_PlayMotion(6);	break;
+	case ID_BUTTON_PLAYMOTION_7: KBT1_PlayMotion(7);	break;
+	case ID_BUTTON_PLAYMOTION_8: KBT1_PlayMotion(8);	break;
 
 	default:
 		break;
@@ -179,7 +184,7 @@ BluetoothDebugForm::OnFormBackRequested(Form& source)
 bool
 BluetoothDebugForm::AddMainControl(ControlType type, const String& text, int firstActionId /*= -1*/, int secondActionId /*= -1*/)
 {
-    static const int ACTION_BUTTON_HEIGHT = 72;
+    static const int ACTION_BUTTON_HEIGHT = 60;	//72;
     static const int EDIT_FIELD_HEIGHT = 96;
     static const int CHECK_BUTTON_HEIGHT = 96;
     static const int DEVICE_NAME_LIMIT = 64;
@@ -311,7 +316,20 @@ BluetoothDebugForm::OnSceneActivatedN(const SceneId &previousSceneId, const Scen
 void BluetoothDebugForm::OnSppConnectionResponded(result r)
 {
 	AppLog("OnSppConnectionResponded: r=%d", r);	// E_SYSTEM = -1610609822 =
-	if (!IsFailed(r)) __isBtKBTConnectionResponded = true;
+	if (!IsFailed(r)) {
+		// connected without error
+		__isBtKBTConnectionResponded = true;
+		//static_cast<Button*>(__controlList.GetAt(ButtonActionType2::CONNECT))->SetEnabled(false);
+		//static_cast<Button*>(__controlList.GetAt(ButtonActionType2::DISCONNECT))->SetEnabled(true);
+		static_cast<Button*>(__controlList.GetAt(ButtonActionType2::CONNECT))->SetColor(BUTTON_STATUS_NORMAL, Color::GetColor(COLOR_ID_GREEN));
+		//static_cast<Button*>(__controlList.GetAt(ButtonActionType2::DISCONNECT))->SetColor(BUTTON_STATUS_NORMAL,Color(0,0,0));
+	} else {
+		//static_cast<Button*>(__controlList.GetAt(ButtonActionType2::CONNECT))->SetEnabled(true);
+		//static_cast<Button*>(__controlList.GetAt(ButtonActionType2::DISCONNECT))->SetEnabled(false);
+		static_cast<Button*>(__controlList.GetAt(ButtonActionType2::CONNECT))->SetColor(BUTTON_STATUS_NORMAL, Color::GetColor(COLOR_ID_RED));
+		//static_cast<Button*>(__controlList.GetAt(ButtonActionType2::DISCONNECT))->SetColor(BUTTON_STATUS_NORMAL,Color(255,0,0));
+	}
+	RequestRedraw();
 }
 
 void BluetoothDebugForm::OnSppConnectionRequested(const Tizen::Net::Bluetooth::BluetoothDevice &device)
@@ -328,21 +346,32 @@ void BluetoothDebugForm::OnSppDataReceived(Tizen::Base::ByteBuffer &buffer)
 		buffer.GetArray(res, 0, 4);
 		if (res[2] == 0x06) {
 			AppLog("ACK Received from KBT-1");
+			static_cast<Button*>(__controlList.GetAt(ButtonActionType2::DISCONNECT))->SetColor(BUTTON_STATUS_NORMAL, Color::GetColor(COLOR_ID_BLUE));
 		} else if ( res[2] == 0x15) {
 			AppLog("NAK Received from KBT-1");
+			static_cast<Button*>(__controlList.GetAt(ButtonActionType2::DISCONNECT))->SetColor(BUTTON_STATUS_NORMAL, Color::GetColor(COLOR_ID_RED));
 		}
+	} else {
+		/* unexpected response */
+		static_cast<Button*>(__controlList.GetAt(ButtonActionType2::DISCONNECT))->SetColor(BUTTON_STATUS_NORMAL, Color::GetColor(COLOR_ID_YELLOW));
 	}
+	RequestRedraw();
 }
 
 void BluetoothDebugForm::OnSppDisconnected(result r)
 {
 	AppLog("OnSppDisconnected: r=%d", r);
 	__isBtKBTConnectionResponded = false;
+	//static_cast<Button*>(__controlList.GetAt(ButtonActionType2::CONNECT))->SetEnabled(true);
+	//sstatic_cast<Button*>(__controlList.GetAt(ButtonActionType2::DISCONNECT))->SetEnabled(false);
+	static_cast<Button*>(__controlList.GetAt(ButtonActionType2::CONNECT))->SetColor(BUTTON_STATUS_NORMAL, Color::GetColor(COLOR_ID_RED));
+	//static_cast<Button*>(__controlList.GetAt(ButtonActionType2::DISCONNECT))->SetColor(BUTTON_STATUS_NORMAL,Color(255,0,0));
+	RequestRedraw();
 }
 
 
 byte
-RCB4_calc_checksum(byte *cmd, int len)
+BluetoothDebugForm::RCB4_calc_checksum(byte *cmd, int len)
 {
 	byte sum = 0;
 	for ( int i = 0; i < len; i++) sum += cmd[i];
@@ -426,7 +455,7 @@ BluetoothDebugForm::KBT1_PlayMotion(int index)
 	// set move address
 	//  calculate start address
 	unsigned long motion_addr;
-	motion_addr = 3000 + 2048*(index-1);	// For HeartToHeart V2.0, V2.1 only
+	motion_addr = 3000 + 2048*(index-1);	// For HeartToHeart4 V2.0, V2.1 only
 	RCB4_cmd_set_move_address[2] = motion_addr & 0xff;
 	RCB4_cmd_set_move_address[3] = (motion_addr >>  8) & 0xff;
 	RCB4_cmd_set_move_address[4] = (motion_addr >> 16) & 0xff;

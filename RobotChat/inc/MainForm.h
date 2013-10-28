@@ -46,9 +46,9 @@ class MainForm
 	, public Tizen::Net::Wifi::IWifiManagerEventListener
 	, public Tizen::Net::Bluetooth::BluetoothDevice
 	//, public Tizen::Net::Bluetooth::BluetoothSppInitiator
-	, public Tizen::Net::Bluetooth::IBluetoothDeviceEventListener
-	, public Tizen::Net::Bluetooth::IBluetoothManagerEventListener
-	, public Tizen::Net::Bluetooth::IBluetoothSppInitiatorEventListener
+	//, public Tizen::Net::Bluetooth::IBluetoothDeviceEventListener
+	//, public Tizen::Net::Bluetooth::IBluetoothManagerEventListener
+	//, public Tizen::Net::Bluetooth::IBluetoothSppInitiatorEventListener
 {
 	enum CurrentState { STATE_DEACTIVATED,
 	                    STATE_ACTIVATED,
@@ -115,16 +115,16 @@ public:
 	virtual void  OnBluetoothServiceListReceived (const BluetoothDevice &targetDevice, unsigned long serviceList, result r){}
 	virtual void  OnBluetoothUnpaired (const BluetoothDevice &unpairedDevice){}
 
-#if 1
+#if 0
 	// IBluetoothSppInitiatorEventListener
 	virtual void  OnSppConnectionResponded (result r) {}
 	virtual void  OnSppDataReceived (Tizen::Base::ByteBuffer &buffer) {}
 	virtual void  OnSppDisconnected (result r) {}
-#endif
 
 	// IBluetoothManagerEventListener
 	virtual void  OnBluetoothActivated (result r);
 	virtual void  OnBluetoothDeactivated (result r);
+#endif
 
 private:
 	void ShowMainForm(void);
@@ -198,13 +198,12 @@ private:
 	bool __isWifiDeactivating;
 	Tizen::Net::Wifi::WifiManager __wifiManager;
 
-	bool __isBtActivating;
-	bool __isBtDeactivating;
-	Tizen::Net::Bluetooth::BluetoothManager __btManager;
-#if 0
-	bool __isBtKBTReady;
-	Tizen::Net::Bluetooth::BluetoothSppInitiator __sppInitiator;
-#endif
+	bool __robotSideMode;		// true if equipped with Robot, false if remote controller side.
+	//bool __isBtActivating;
+	//bool __isBtDeactivating;
+	//Tizen::Net::Bluetooth::BluetoothManager __btManager;
+	//Tizen::Net::Bluetooth::BluetoothSppInitiator __sppInitiator;
+
 };
 
 #endif  //_MAIN_FORM_H_

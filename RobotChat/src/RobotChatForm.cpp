@@ -89,6 +89,23 @@ RobotChatForm::Initialize(void)
 	r = __pNetConnection->Start();
 	TryReturn(r == E_SUCCESS, false, "Failed to start NetConnection");
 
+    /* initialize & activate Bluetooth and connect to KBT-1 */
+	if ( kbt.Initialize() ) {
+		kbt.Connect();
+	}
+
+	// Add test button
+	Rectangle clientRect = GetClientAreaBounds();
+    {
+        Button* pButton = new Button();
+        pButton->Construct(Rectangle(20, 0, clientRect.width - 40, 72), "Play Motion 1");
+        pButton->SetActionId(1000);
+        pButton->AddActionEventListener(*this);
+        AddControl(*pButton);
+        //__controlList.Add(pButton);
+        //currentHeight += ACTION_BUTTON_HEIGHT + emptySpaceHeight;
+    }
+
 	return true;
 }
 
@@ -132,6 +149,20 @@ RobotChatForm::OnSceneActivatedN(const SceneId &previousSceneId, const SceneId &
     delete pWifiDirectDeviceInfo;
 
     RequestRedraw();
+}
+
+void
+RobotChatForm::OnActionPerformed(const Control& source, int actionId)
+{
+	switch (actionId)
+	{
+	case 1000: kbt.PlayMotion(1);	break;
+
+	default:
+		break;
+	}
+
+	return;
 }
 
 result
