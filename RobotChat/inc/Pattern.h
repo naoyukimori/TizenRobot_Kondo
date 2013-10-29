@@ -18,19 +18,17 @@ class Pattern
 {
 public:
 	Pattern(void);
-	Pattern(String name, String fileName, String desc, String type,
-			unsigned int motionNumber, unsigned int delay, unsigned int duration);
 	~Pattern(void);
 
-	String GetName(void);
-	void SetName(String name);
+	String* GetName(void);
+	void SetName(String* name);
 	String GetMediaFilePath(void);
-	String GetMediaFileName(void);
-	void SetMediaFileName(String fileName);
-	String GetDescription(void);
-	void SetDescription(String desc);
-	String GetType(void);
-	void SetType(String type);
+	String* GetMediaFileName(void);
+	void SetMediaFileName(String* fileName);
+	String* GetDescription(void);
+	void SetDescription(String* desc);
+	String* GetType(void);
+	void SetType(String* type);
 	unsigned int GetMotionNumber(void);
 	void SetMotionNumber(unsigned int number);
 	unsigned int GetDelay(void);
@@ -39,12 +37,11 @@ public:
 	void SetDuration(unsigned int duration);
 
 protected:
-	String _pName;
-	String _pFileName;
-	String _pPathToMedia;
-	String _pType;
+	String* _pName;
+	String* _pFileName;
+	String* _pType;
 	unsigned int _pDuration;
-	String _pDescription;
+	String* _pDescription;
 	unsigned int _pMotionNumber;
 	unsigned int _pDelay;
 };

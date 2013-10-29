@@ -14,7 +14,25 @@
 			"description": "Shopping pattern 2",
 			"filename": "S-2.mp4",
 			"duration": 1000,
-			"motion": 1,
+			"motion": 2,
+			"delay":0
+		},
+		{
+			"name": "S-3",
+			"type": "Shopping",
+			"description": "Shopping pattern 3",
+			"filename": "S-3.mp4",
+			"duration": 1000,
+			"motion": 3,
+			"delay":0
+		},
+		{
+			"name": "S-4",
+			"type": "Shopping",
+			"description": "Shopping pattern 4",
+			"filename": "S-4.mp4",
+			"duration": 1000,
+			"motion": 4,
 			"delay":0
 		}
 	]

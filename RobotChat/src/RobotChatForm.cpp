@@ -148,6 +148,78 @@ RobotChatForm::GeneratePattern(void)
 	JsonObject* pObject = static_cast< JsonObject* >(pJson);
 	IMapEnumeratorT< const String*, IJsonValue* >* pMapEnum = pObject->GetMapEnumeratorN();
 
+	IJsonValue* currentValue = null;
+	while (pMapEnum->MoveNext() == E_SUCCESS)
+	{
+		const String* key = null;
+		pMapEnum->GetKey(key);
+		pMapEnum->GetValue(currentValue);
+		if (currentValue->GetType() == JSON_TYPE_ARRAY && key->Equals(L"Robot patterns", true))
+		{
+			JsonArray* pJsonArray = static_cast< JsonArray* >(currentValue);
+			pJsonArray->GetCount();
+			IEnumeratorT< IJsonValue* >* pEnum = pJsonArray->GetEnumeratorN();
+			while (pEnum->MoveNext() == E_SUCCESS)
+			{
+				Pattern* pPattern = new (std::nothrow) Pattern();
+				pEnum->GetCurrent(currentValue);
+				if (currentValue->GetType() == JSON_TYPE_OBJECT)
+				{
+					JsonObject* pObject = static_cast< JsonObject* >(currentValue);
+					IMapEnumeratorT< const String*, IJsonValue* >* pMapEnum = pObject->GetMapEnumeratorN();
+					while (pMapEnum->MoveNext() == E_SUCCESS)
+					{
+						const String* key;
+						pMapEnum->GetKey(key);
+						pMapEnum->GetValue(currentValue);
+						if (key->Equals(L"name", true))
+						{
+							JsonString* pVal = static_cast< JsonString* >(currentValue);
+							pPattern->SetName(pVal);
+						}
+						else if (key->Equals(L"type", true))
+						{
+							JsonString* pVal = static_cast< JsonString* >(currentValue);
+							pPattern->SetType(pVal);
+						}
+						else if (key->Equals(L"description", true))
+						{
+							JsonString* pVal = static_cast< JsonString* >(currentValue);
+							pPattern->SetDescription(pVal);
+						}
+						else if (key->Equals(L"filename", true))
+						{
+							JsonString* pVal = static_cast< JsonString* >(currentValue);
+							pPattern->SetMediaFileName(pVal);
+						}
+						else if (key->Equals(L"duration", true))
+						{
+							JsonNumber* pVal = static_cast< JsonNumber* >(currentValue);
+							pPattern->SetDuration((unsigned int)(pVal->ToInt()));
+						}
+						else if (key->Equals(L"motion", true))
+						{
+							JsonNumber* pVal = static_cast< JsonNumber* >(currentValue);
+							pPattern->SetMotionNumber((unsigned int)(pVal->ToInt()));
+						}
+						else if (key->Equals(L"delay", true))
+						{
+							JsonNumber* pVal = static_cast< JsonNumber* >(currentValue);
+							pPattern->SetDelay((unsigned int)(pVal->ToInt()));
+						}
+					}
+					delete pMapEnum;
+				}
+				_pPatterns->Add((Object*)pPattern);
+				AppLog("[DEBUG] -----Added new pattern. Path = %S, motion = %d\n",
+						pPattern->GetMediaFilePath().GetPointer(), pPattern->GetMotionNumber());
+			}
+			delete pEnum;
+			break;
+		}
+	}
+	delete pMapEnum;
+
 	return;
 
 CATCH:
@@ -163,6 +235,7 @@ RobotChatForm::OnInitializing(void)
 
 	_pPatterns = new (std::nothrow) ArrayList();
 	_pPatterns->Construct();
+	GeneratePattern();
 
 	return E_SUCCESS;
 }

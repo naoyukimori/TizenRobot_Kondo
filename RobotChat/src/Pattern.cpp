@@ -12,46 +12,28 @@ using namespace Tizen::Base;
 using namespace Tizen::App;
 
 Pattern::Pattern()
-	: _pName()
-	, _pFileName()
-	, _pPathToMedia()
-	, _pDuration(0)
-	, _pDescription()
+	: _pName(null)
+	, _pFileName(null)
+	, _pDuration(1000)
+	, _pDescription(null)
 	, _pMotionNumber(1)
 	, _pDelay(0)
 {
-	std::stringstream str;
-	std::string s1 = "5f0066";
-	str << s1;
-	int value;
-	str >> std::hex >> value;
-}
 
-Pattern::Pattern(String name, String fileName, String desc, String type,
-			unsigned int motionNumber, unsigned int delay, unsigned int duration)
-{
-	_pName = name;
-	_pFileName = fileName;
-	_pDescription = desc;
-	_pType = type;
-	_pMotionNumber = motionNumber;
-	_pDelay = delay;
-	_pDuration = duration;
-	_pPathToMedia = App::GetInstance()->GetAppResourcePath() + "Video/" + _pType + L"/" + _pFileName;
 }
 
 Pattern::~Pattern()
 {
 }
 
-String
+String*
 Pattern::GetName(void)
 {
 	return _pName;
 }
 
 void
-Pattern::SetName(String name)
+Pattern::SetName(String* name)
 {
 	_pName = name;
 }
@@ -59,42 +41,43 @@ Pattern::SetName(String name)
 String
 Pattern::GetMediaFilePath(void)
 {
-	return _pPathToMedia;
+	if (_pType && _pFileName)
+		return App::GetInstance()->GetAppResourcePath() + L"Video/" + *_pType + L"/" + *_pFileName;
+	return null;
 }
 
-String
+String*
 Pattern::GetMediaFileName(void)
 {
 	return _pFileName;
 }
 
 void
-Pattern::SetMediaFileName(String fileName)
+Pattern::SetMediaFileName(String* fileName)
 {
 	_pFileName = fileName;
-	_pPathToMedia = App::GetInstance()->GetAppResourcePath() + _pType + L"/" + _pFileName;
 }
 
-String
+String*
 Pattern::GetDescription(void)
 {
 	return _pDescription;
 }
 
 void
-Pattern::SetDescription(String desc)
+Pattern::SetDescription(String* desc)
 {
 	_pDescription = desc;
 }
 
-String
+String*
 Pattern::GetType(void)
 {
 	return _pType;
 }
 
 void
-Pattern::SetType(String type)
+Pattern::SetType(String* type)
 {
 	_pType = type;
 }
@@ -121,4 +104,16 @@ void
 Pattern::SetDelay(unsigned int delay)
 {
 	_pDelay = delay;
+}
+
+unsigned int
+Pattern::GetDuration(void)
+{
+	return _pDuration;
+}
+
+void
+Pattern::SetDuration(unsigned int duration)
+{
+	_pDuration = duration;
 }
