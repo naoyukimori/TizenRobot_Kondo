@@ -11,7 +11,6 @@
 #include "FormFactory.h"
 
 using namespace Tizen::Base;
-using namespace Tizen::App;
 using namespace Tizen::Ui;
 using namespace Tizen::Ui::Controls;
 using namespace Tizen::Graphics;
@@ -90,9 +89,7 @@ void
 VideoForm::OnSceneActivatedN(const SceneId &previousSceneId, const SceneId &currentSceneId, IList *pArgs)
 {
     TryReturnVoid(pArgs != null, "The argument list is null");
-    String* fileName = static_cast<String*>(pArgs->GetAt(0));
-
-    __pFilePath = Tizen::App::App::GetInstance()->GetAppResourcePath() + L"Video/Shopping/" + fileName->GetPointer();
+    __pFilePath = static_cast<String*>(pArgs->GetAt(0));
 
     result r = PlayVideo();
     if (IsFailed(r))
@@ -147,7 +144,7 @@ VideoForm::PlayVideo(void)
 {
 	result r = E_SUCCESS;
 
-	r = __pPlayer->OpenFile(__pFilePath);
+	r = __pPlayer->OpenFile(*__pFilePath);
 	if (IsFailed(r))
 	{
 		AppLogException("[DEBUG] Failed to open file");

@@ -99,21 +99,10 @@ RobotChatForm::Initialize(void)
 	TryReturn(r == E_SUCCESS, false, "Failed to start NetConnection");
 
     /* initialize & activate Bluetooth and connect to KBT-1 */
-	if ( kbt.Initialize() ) {
+	if (kbt.Initialize())
+	{
 		kbt.Connect();
 	}
-
-	// Add test button
-	Rectangle clientRect = GetClientAreaBounds();
-    {
-        Button* pButton = new Button();
-        pButton->Construct(Rectangle(20, 0, clientRect.width - 40, 72), "Play Motion 1");
-        pButton->SetActionId(1000);
-        pButton->AddActionEventListener(*this);
-        AddControl(*pButton);
-        //__controlList.Add(pButton);
-        //currentHeight += ACTION_BUTTON_HEIGHT + emptySpaceHeight;
-    }
 
 	return true;
 }
@@ -211,8 +200,6 @@ RobotChatForm::GeneratePattern(void)
 					delete pMapEnum;
 				}
 				_pPatterns->Add((Object*)pPattern);
-				AppLog("[DEBUG] -----Added new pattern. Path = %S, motion = %d\n",
-						pPattern->GetMediaFilePath().GetPointer(), pPattern->GetMotionNumber());
 			}
 			delete pEnum;
 			break;
@@ -269,20 +256,6 @@ RobotChatForm::OnSceneActivatedN(const SceneId &previousSceneId, const SceneId &
     delete pWifiDirectDeviceInfo;
 
     RequestRedraw();
-}
-
-void
-RobotChatForm::OnActionPerformed(const Control& source, int actionId)
-{
-	switch (actionId)
-	{
-	case 1000: kbt.PlayMotion(1);	break;
-
-	default:
-		break;
-	}
-
-	return;
 }
 
 result
@@ -409,17 +382,33 @@ RobotChatForm::OnSocketReadyToReceive(Socket& socket)
 
 	}
 
-	String* tmpStr;
-	if (message.Contains(L"sample"))
+	Pattern* pPattern = null;
+	String* pMediaPath = null;
+	unsigned int pMotionIndex = 0;
+	for (int i = 0; i < _pPatterns->GetCount(); i++)
 	{
-		tmpStr = new String(L"sample.mp4");
-	}
-	else
-	{
-		tmpStr = new String(L"S-1.mp4");
+		pPattern = (Pattern*)(_pPatterns->GetAt(i));
+		if (pPattern)
+		{
+			String* pName = pPattern->GetName();
+			if (pName)
+			{
+				const String* str = new String(pName->GetPointer());
+				if (message.Contains(*str))
+				{
+					pMediaPath = new String(pPattern->GetMediaFilePath().GetPointer());
+					pMotionIndex = pPattern->GetMotionNumber();
+					break;
+				}
+			}
+		}
 	}
 
-	ArrayList* pArgs = new ArrayList();
-	pArgs->Add(tmpStr);
-	SceneManager::GetInstance()->GoForward(ForwardSceneTransition(SCENE_VIDEO_FORM), pArgs);
+	if (pMediaPath && pMotionIndex > 0)
+	{
+		kbt.PlayMotion(pMotionIndex);
+		ArrayList* pArgs = new ArrayList();
+		pArgs->Add(pMediaPath);
+		SceneManager::GetInstance()->GoForward(ForwardSceneTransition(SCENE_VIDEO_FORM), pArgs);
+	}
 }

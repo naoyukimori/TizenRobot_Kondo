@@ -60,7 +60,7 @@ public:
 private:
 	std::unique_ptr<Tizen::Media::Player> __pPlayer;
 	std::unique_ptr<Tizen::Ui::Controls::OverlayRegion> __pOverlay;
-	String __pFilePath;
+	String* __pFilePath;
 
 	result PlayVideo(void);
 };

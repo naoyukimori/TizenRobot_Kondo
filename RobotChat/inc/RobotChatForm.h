@@ -25,7 +25,6 @@ using namespace Tizen::Ui::Controls;
 class RobotChatForm
 	: public Tizen::Ui::Controls::Form
 	, public Tizen::Ui::Controls::IFormBackEventListener
-	, public Tizen::Ui::IActionEventListener
 	, public Tizen::Ui::Scenes::ISceneEventListener
 	, public Tizen::Net::INetConnectionEventListener
 	, public Tizen::Net::Sockets::ISocketEventListener
@@ -42,9 +41,6 @@ public:
 
 	// Form
 	virtual result OnInitializing(void);
-
-	// IActionEventListener
-	virtual void OnActionPerformed(const Tizen::Ui::Control& source, int actionId);
 
 	// IFormBackEventListener
 	virtual void OnFormBackRequested(Tizen::Ui::Controls::Form& source);
