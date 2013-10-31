@@ -24,6 +24,10 @@ using namespace Tizen::Base::Collection;
 using namespace Tizen::Base::Utility;
 using namespace Tizen::Ui::Scenes;
 using namespace Tizen::Web::Json;
+using namespace Tizen::Media;
+
+const wchar_t GALLERY_IMAGE_PATH1[] = L"Image/face1.png";
+const wchar_t GALLERY_IMAGE_PATH2[] = L"Image/face2.png";
 
 RobotChatForm::RobotChatForm()
 	: __localIpAddress()
@@ -33,6 +37,9 @@ RobotChatForm::RobotChatForm()
 	, __pNetConnection(null)
 	, __pUdpSocket(null)
 	, __chatPortNumber(0)
+	, __pMutex(null)
+	, __pImage1(null)
+	, __pImage2(null)
 {
 
 }
@@ -59,6 +66,13 @@ RobotChatForm::~RobotChatForm()
 		__pNetConnection->RemoveNetConnectionListener(*(INetConnectionEventListener*) this);
 		delete __pNetConnection;
 		__pNetConnection = null;
+	}
+
+	__items.RemoveAll(true);
+
+	if (__pMutex)
+	{
+		 delete __pMutex;
 	}
 
 	if (_pPatterns)
@@ -106,6 +120,47 @@ RobotChatForm::Initialize(void)
 
 	return true;
 }
+
+void
+RobotChatForm::GetBitmap(void)
+{
+	Image* pImage = new (std::nothrow) Image();
+	pImage->Construct();
+
+	__pImage1 = pImage->DecodeN(App::GetInstance()->GetAppResourcePath() + GALLERY_IMAGE_PATH1, BITMAP_PIXEL_FORMAT_ARGB8888);
+	__pMutex->Acquire();
+	__items.Add(*__pImage1);
+	__pMutex->Release();
+
+	__pImage2 = pImage->DecodeN(App::GetInstance()->GetAppResourcePath() + GALLERY_IMAGE_PATH2, BITMAP_PIXEL_FORMAT_ARGB8888);
+    __pMutex->Acquire();
+	__items.Add(*__pImage2);
+	__pMutex->Release();
+
+	/*
+	__pImage3 = pImage->DecodeN(App::GetInstance()->GetAppResourcePath() + GALLERY_IMAGE_PATH3, BITMAP_PIXEL_FORMAT_ARGB8888);
+    __pMutex->Acquire();
+	__items.Add(*__pImage3);
+	__pMutex->Release();
+
+	__pImage4 = pImage->DecodeN(App::GetInstance()->GetAppResourcePath() + GALLERY_IMAGE_PATH4, BITMAP_PIXEL_FORMAT_ARGB8888);
+    __pMutex->Acquire();
+	__items.Add(*__pImage4);
+	__pMutex->Release();
+	*/
+
+	delete pImage;
+}
+
+void
+RobotChatForm::CreateGallery(void)
+{
+	__pGallery = new Gallery();
+	__pGallery->Gallery::Construct(GetBoundsF());
+	__pGallery->SetItemProvider(*this);
+	AddControl(__pGallery);
+}
+
 
 void
 RobotChatForm::GeneratePattern(void)
@@ -216,13 +271,20 @@ CATCH:
 result
 RobotChatForm::OnInitializing(void)
 {
+	result r = E_SUCCESS;
 	SetOrientation(ORIENTATION_LANDSCAPE);
 
 	SetFormBackEventListener(this);
 
+	__pMutex = new (std::nothrow) Mutex();
+	r = __pMutex->Create();
+
 	_pPatterns = new (std::nothrow) ArrayList();
-	_pPatterns->Construct();
+	r = _pPatterns->Construct();
 	GeneratePattern();
+
+	GetBitmap();
+	CreateGallery();
 
 	return E_SUCCESS;
 }
@@ -411,4 +473,39 @@ RobotChatForm::OnSocketReadyToReceive(Socket& socket)
 		pArgs->Add(pMediaPath);
 		SceneManager::GetInstance()->GoForward(ForwardSceneTransition(SCENE_VIDEO_FORM), pArgs);
 	}
+}
+
+int
+RobotChatForm::GetItemCount(void)
+{
+	return __items.GetCount();
+}
+
+GalleryItem*
+RobotChatForm::CreateItem(int index)
+{
+	GalleryItem* pGallery = new (std::nothrow) GalleryItem();
+    __pMutex->Acquire();
+	Bitmap* __pImageTemp = static_cast<Bitmap*>(__items.GetAt(index));
+
+	switch(index)
+	{
+	case 0:
+		pGallery->Construct(*__pImageTemp, App::GetInstance()->GetAppResourcePath() + GALLERY_IMAGE_PATH1);
+		break;
+	case 1:
+		pGallery->Construct(*__pImageTemp, App::GetInstance()->GetAppResourcePath() + GALLERY_IMAGE_PATH2);
+		break;
+	default:
+		break;
+	}
+	__pMutex->Release();
+	return pGallery;
+}
+
+bool
+RobotChatForm::DeleteItem(int index, GalleryItem* pItem)
+{
+	delete pItem;
+	return true;
 }

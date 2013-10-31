@@ -10,6 +10,7 @@
 
 #include <FBase.h>
 #include <FIo.h>
+#include <FMedia.h>
 #include <FUi.h>
 #include <FNet.h>
 #include <FWebJson.h>
@@ -18,6 +19,7 @@
 
 using namespace Tizen::Base;
 using namespace Tizen::Base::Collection;
+using namespace Tizen::Base::Runtime;
 using namespace Tizen::Graphics;
 using namespace Tizen::Ui;
 using namespace Tizen::Ui::Controls;
@@ -28,12 +30,16 @@ class RobotChatForm
 	, public Tizen::Ui::Scenes::ISceneEventListener
 	, public Tizen::Net::INetConnectionEventListener
 	, public Tizen::Net::Sockets::ISocketEventListener
+	, public Tizen::Ui::Controls::IGalleryItemProvider
 {
 public:
 	RobotChatForm(void);
 	virtual ~RobotChatForm(void);
 
 	bool Initialize(void);
+
+	void GetBitmap(void);
+	void CreateGallery(void);
 
 	void ShowMessageBox(const Tizen::Base::String& title, const Tizen::Base::String& text);
 
@@ -50,6 +56,11 @@ public:
 	                                const Tizen::Ui::Scenes::SceneId &currentSceneId, Tizen::Base::Collection::IList *pArgs);
 	virtual void OnSceneDeactivated(const Tizen::Ui::Scenes::SceneId &currentSceneId,
 	                                const Tizen::Ui::Scenes::SceneId &nextSceneId){}
+
+	//IGalleryItemProvider
+	virtual Tizen::Ui::Controls::GalleryItem* CreateItem(int index);
+	virtual bool DeleteItem(int index, Tizen::Ui::Controls::GalleryItem* pItem);
+	virtual int GetItemCount(void);
 
 	// INetConnectionEventListener
 	virtual void OnNetConnectionStarted(Tizen::Net::NetConnection& netConnection, result r);
@@ -77,6 +88,12 @@ private:
 	KBT1Controller kbt;
 
 	ArrayList* _pPatterns;
+
+	Gallery* __pGallery;
+	ArrayList __items;
+	Mutex* __pMutex;
+	Bitmap* __pImage1;
+	Bitmap* __pImage2;
 
 	result InitializeChatSocket(void);
 };
