@@ -38,8 +38,6 @@ RobotChatForm::RobotChatForm()
 	, __pUdpSocket(null)
 	, __chatPortNumber(0)
 	, __pMutex(null)
-	, __pImage1(null)
-	, __pImage2(null)
 {
 
 }
@@ -68,7 +66,10 @@ RobotChatForm::~RobotChatForm()
 		__pNetConnection = null;
 	}
 
-	__items.RemoveAll(true);
+	if (__fileList.GetCount() > 0)
+	{
+		__fileList.RemoveAll(true);
+	}
 
 	if (__pMutex)
 	{
@@ -119,37 +120,6 @@ RobotChatForm::Initialize(void)
 	}
 
 	return true;
-}
-
-void
-RobotChatForm::GetBitmap(void)
-{
-	Image* pImage = new (std::nothrow) Image();
-	pImage->Construct();
-
-	__pImage1 = pImage->DecodeN(App::GetInstance()->GetAppResourcePath() + GALLERY_IMAGE_PATH1, BITMAP_PIXEL_FORMAT_ARGB8888);
-	__pMutex->Acquire();
-	__items.Add(*__pImage1);
-	__pMutex->Release();
-
-	__pImage2 = pImage->DecodeN(App::GetInstance()->GetAppResourcePath() + GALLERY_IMAGE_PATH2, BITMAP_PIXEL_FORMAT_ARGB8888);
-    __pMutex->Acquire();
-	__items.Add(*__pImage2);
-	__pMutex->Release();
-
-	/*
-	__pImage3 = pImage->DecodeN(App::GetInstance()->GetAppResourcePath() + GALLERY_IMAGE_PATH3, BITMAP_PIXEL_FORMAT_ARGB8888);
-    __pMutex->Acquire();
-	__items.Add(*__pImage3);
-	__pMutex->Release();
-
-	__pImage4 = pImage->DecodeN(App::GetInstance()->GetAppResourcePath() + GALLERY_IMAGE_PATH4, BITMAP_PIXEL_FORMAT_ARGB8888);
-    __pMutex->Acquire();
-	__items.Add(*__pImage4);
-	__pMutex->Release();
-	*/
-
-	delete pImage;
 }
 
 void
@@ -283,7 +253,7 @@ RobotChatForm::OnInitializing(void)
 	r = _pPatterns->Construct();
 	GeneratePattern();
 
-	GetBitmap();
+	GetFilesList();
 	CreateGallery();
 
 	return E_SUCCESS;
@@ -478,28 +448,28 @@ RobotChatForm::OnSocketReadyToReceive(Socket& socket)
 int
 RobotChatForm::GetItemCount(void)
 {
-	return __items.GetCount();
+	return __fileList.GetCount();
 }
 
 GalleryItem*
 RobotChatForm::CreateItem(int index)
 {
 	GalleryItem* pGallery = new (std::nothrow) GalleryItem();
-    __pMutex->Acquire();
-	Bitmap* __pImageTemp = static_cast<Bitmap*>(__items.GetAt(index));
-
-	switch(index)
+	String* fileName = static_cast<String*>(__fileList.GetAt(index));
+	if (fileName)
 	{
-	case 0:
-		pGallery->Construct(*__pImageTemp, App::GetInstance()->GetAppResourcePath() + GALLERY_IMAGE_PATH1);
-		break;
-	case 1:
-		pGallery->Construct(*__pImageTemp, App::GetInstance()->GetAppResourcePath() + GALLERY_IMAGE_PATH2);
-		break;
-	default:
-		break;
+		Image* pImage = new (std::nothrow) Image();
+		pImage->Construct();
+		Bitmap* __pImageTemp;
+
+		__pMutex->Acquire();
+		__pImageTemp = pImage->DecodeN(*fileName, BITMAP_PIXEL_FORMAT_ARGB8888);
+		pGallery->Construct(*__pImageTemp, *fileName);
+
+		delete pImage;
+		__pMutex->Release();
 	}
-	__pMutex->Release();
+
 	return pGallery;
 }
 
@@ -508,4 +478,89 @@ RobotChatForm::DeleteItem(int index, GalleryItem* pItem)
 {
 	delete pItem;
 	return true;
+}
+
+
+result
+RobotChatForm::IsImageFile(String* pFileName)
+{
+	ImageFormat format = IMG_FORMAT_NONE;
+	int width = 0;
+	int height = 0;
+	result r = E_SUCCESS;
+
+	r = ImageBuffer::GetImageInfo(*pFileName, format, width, height);
+	if (r != E_SUCCESS)
+	{
+		AppLogException("Could not get image information %S", pFileName->GetPointer());
+		return r;
+
+	}
+	if (format != IMG_FORMAT_NONE)
+	{
+		return E_SUCCESS;
+	}
+	return E_UNSUPPORTED_FORMAT;
+}
+
+result
+RobotChatForm::GetFilesList()
+{
+	Directory* pDir = null;
+	DirEnumerator* pDirEnum = null;
+	StringComparer strComparer;
+	result r = E_SUCCESS;
+
+	__fileList.Construct();
+
+	String pDirPath(App::GetInstance()->GetAppResourcePath() + L"Image");
+	pDir = new (std::nothrow) Directory();
+	pDir->Construct(pDirPath);
+
+	TryCatch(r == E_SUCCESS, delete pDir ,"[%s] Failed to construct image directory", GetErrorMessage(r));
+
+	pDirEnum = pDir->ReadN();
+
+	TryCatch(pDirEnum != null, delete pDir ,"[%s] Failed to read entries from image directory", GetErrorMessage(GetLastResult()));
+
+	while (pDirEnum->MoveNext() == E_SUCCESS)
+	{
+		DirEntry dirEntry = pDirEnum->GetCurrentDirEntry();
+		if ((dirEntry.IsDirectory() == false) && (dirEntry.IsHidden() == false))
+		{
+			String* fullFileName = new (std::nothrow) String;
+			fullFileName->Append(pDirPath);
+			fullFileName->Append('/');
+			String fileName(dirEntry.GetName());
+			fullFileName->Append(fileName);
+
+			r = IsImageFile(fullFileName);
+			if (r == E_SUCCESS)
+			{
+				__fileList.Add(fullFileName);
+			}
+			else
+			{
+				AppLog("%S is not image file.", fullFileName->GetPointer());
+				delete fullFileName;
+				fullFileName = null;
+			}
+		}
+	}
+
+	__fileList.Sort(strComparer);
+
+	delete pDir;
+	delete pDirEnum;
+
+	if (__fileList.GetCount() >= 0)
+	{
+		return E_SUCCESS;
+	}
+	else
+	{
+		return E_FAILURE;
+	}
+CATCH:
+	return r;
 }

@@ -38,9 +38,6 @@ public:
 
 	bool Initialize(void);
 
-	void GetBitmap(void);
-	void CreateGallery(void);
-
 	void ShowMessageBox(const Tizen::Base::String& title, const Tizen::Base::String& text);
 
 	void GeneratePattern(void);
@@ -90,12 +87,13 @@ private:
 	ArrayList* _pPatterns;
 
 	Gallery* __pGallery;
-	ArrayList __items;
+	ArrayList __fileList;
 	Mutex* __pMutex;
-	Bitmap* __pImage1;
-	Bitmap* __pImage2;
 
 	result InitializeChatSocket(void);
+	result IsImageFile(Tizen::Base::String* fileName);
+	result GetFilesList();
+	void CreateGallery(void);
 };
 
 
