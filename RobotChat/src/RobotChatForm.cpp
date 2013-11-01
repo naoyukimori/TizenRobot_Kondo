@@ -38,6 +38,7 @@ RobotChatForm::RobotChatForm()
 	, __pUdpSocket(null)
 	, __chatPortNumber(0)
 	, __pMutex(null)
+	, __pMediaPath(null)
 {
 
 }
@@ -118,6 +119,8 @@ RobotChatForm::Initialize(void)
 	{
 		kbt.Connect();
 	}
+
+	__pTimer.Construct(*this);
 
 	return true;
 }
@@ -415,7 +418,12 @@ RobotChatForm::OnSocketReadyToReceive(Socket& socket)
 	}
 
 	Pattern* pPattern = null;
-	String* pMediaPath = null;
+	if (__pMediaPath)
+	{
+		delete __pMediaPath;
+		__pMediaPath = null;
+	}
+
 	unsigned int pMotionIndex = 0;
 	for (int i = 0; i < _pPatterns->GetCount(); i++)
 	{
@@ -428,7 +436,7 @@ RobotChatForm::OnSocketReadyToReceive(Socket& socket)
 				const String* str = new String(pName->GetPointer());
 				if (message.Contains(*str))
 				{
-					pMediaPath = new String(pPattern->GetMediaFilePath().GetPointer());
+					__pMediaPath = new String(pPattern->GetMediaFilePath().GetPointer());
 					pMotionIndex = pPattern->GetMotionNumber();
 					break;
 				}
@@ -436,12 +444,10 @@ RobotChatForm::OnSocketReadyToReceive(Socket& socket)
 		}
 	}
 
-	if (pMediaPath && pMotionIndex > 0)
+	if (__pMediaPath && pMotionIndex > 0)
 	{
 		kbt.PlayMotion(pMotionIndex);
-		ArrayList* pArgs = new ArrayList();
-		pArgs->Add(pMediaPath);
-		SceneManager::GetInstance()->GoForward(ForwardSceneTransition(SCENE_VIDEO_FORM), pArgs);
+		__pTimer.Start(100);
 	}
 }
 
@@ -563,4 +569,12 @@ RobotChatForm::GetFilesList()
 	}
 CATCH:
 	return r;
+}
+
+void
+RobotChatForm::OnTimerExpired(Timer &timer)
+{
+	ArrayList* pArgs = new ArrayList();
+	pArgs->Add(__pMediaPath);
+	SceneManager::GetInstance()->GoForward(ForwardSceneTransition(SCENE_VIDEO_FORM), pArgs);
 }

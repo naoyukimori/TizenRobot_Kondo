@@ -28,12 +28,14 @@ BluetoothDebugForm::BluetoothDebugForm()
 
 BluetoothDebugForm::~BluetoothDebugForm(void)
 {
+	/*
 	if ( __isBtKBTReady ) {
 		//Disconnect from the SPP acceptor:
 		__sppInitiator.Disconnect();
 		__isBtKBTReady = false;
 	}
 	__btManager.Deactivate();
+	*/
 }
 
 bool

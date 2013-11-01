@@ -31,6 +31,7 @@ class RobotChatForm
 	, public Tizen::Net::INetConnectionEventListener
 	, public Tizen::Net::Sockets::ISocketEventListener
 	, public Tizen::Ui::Controls::IGalleryItemProvider
+	, public Tizen::Base::Runtime::ITimerEventListener
 {
 public:
 	RobotChatForm(void);
@@ -72,10 +73,14 @@ public:
 	virtual void OnSocketReadyToSend(Tizen::Net::Sockets::Socket& socket) {}
 	virtual void OnSocketAccept(Tizen::Net::Sockets::Socket& socket) {}
 
+	// ITimerEventListener
+	virtual void OnTimerExpired(Timer &timer);
+
 private:
 	Tizen::Base::String __localIpAddress;
 	Tizen::Base::String __localDeviceName;
 	Tizen::Base::String __broadcastMessageHeader;
+	Tizen::Base::String* __pMediaPath;
 
 	Tizen::Net::Wifi::WifiDirectDevice* __pWifiDirectDevice;
 	Tizen::Net::NetConnection* __pNetConnection;
@@ -89,6 +94,8 @@ private:
 	Gallery* __pGallery;
 	ArrayList __fileList;
 	Mutex* __pMutex;
+
+	Timer __pTimer;
 
 	result InitializeChatSocket(void);
 	result IsImageFile(Tizen::Base::String* fileName);

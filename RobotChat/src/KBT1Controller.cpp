@@ -27,7 +27,7 @@ KBT1Controller::~KBT1Controller(void)
 		__sppInitiator.Disconnect();
 		__isBtKBTReady = false;
 	}
-	__btManager.Deactivate();
+	//__btManager.Deactivate();
 }
 
 bool
@@ -186,6 +186,8 @@ KBT1Controller::RCB4_calc_checksum(byte *cmd, int len)
 result
 KBT1Controller::Ping()
 {
+	if (!IsConnected()) return E_FAILURE;		// not connected yet
+
 	result r = E_SUCCESS;
 	ByteBuffer sendBuffer;
 	//byte b[] = { 0x0d, 0x00, 0x02, 0x50, 0x03, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x63 };	// HTH KRC Num8
@@ -215,6 +217,8 @@ KBT1Controller::Ping()
 result
 KBT1Controller::Move_Head()
 {
+	if (!IsConnected()) return E_FAILURE;		// not connected yet
+
 	result r = E_SUCCESS;
 	byte RCB4_cmd_Move_Head[]= { 0x07, 0x0f, 0x00, 0x01, 0xac, 0x0d, 0xd0 };	// Move single servo ICS 0 to poition 3500
 	ByteBuffer sendBuffer;
@@ -235,6 +239,8 @@ KBT1Controller::Move_Head()
 result
 KBT1Controller::PlayMotion(int index)
 {
+	if (!IsConnected()) return E_FAILURE;		// not connected yet
+
 	result r = E_SUCCESS;
 	byte RCB4_cmd_suspend_motion[] = { 0x09, 0x00, 0x02, 0x00, 0x00, 0x00, 0x10, 0x83, 0x9e };		// suspend motion
 	byte RCB4_cmd_reset_state[] = { 0x11, 0x00, 0x02, 0x02, 0x00, 0x00, 0x4b, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x64 };	// reset program counter and EEPROM refresh flag
