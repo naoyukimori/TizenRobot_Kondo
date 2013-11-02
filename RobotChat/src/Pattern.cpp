@@ -5,7 +5,6 @@
  *      Author: kien
  */
 
-#include <FApp.h>
 #include "Pattern.h"
 
 using namespace Tizen::Base;
@@ -42,7 +41,8 @@ String
 Pattern::GetMediaFilePath(void)
 {
 	if (_pType && _pFileName)
-		return App::GetInstance()->GetAppResourcePath() + L"Video/" + *_pType + L"/" + *_pFileName;
+		return L"Video/" + *_pType + L"/" + *_pFileName;
+		//return App::GetInstance()->GetAppResourcePath() + L"Video/" + *_pType + L"/" + *_pFileName;
 	return null;
 }
 

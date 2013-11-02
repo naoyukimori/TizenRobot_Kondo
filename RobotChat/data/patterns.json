@@ -34,6 +34,42 @@
 			"duration": 1000,
 			"motion": 4,
 			"delay":0
+		},
+		{
+			"name": "C-1",
+			"type": "ChildCare",
+			"description": "ChildCare pattern 1",
+			"filename": "C-1.mp4",
+			"duration": 1000,
+			"motion": 5,
+			"delay":0
+		},
+		{
+			"name": "C-2",
+			"type": "ChildCare",
+			"description": "ChildCare pattern 2",
+			"filename": "C-2.mp4",
+			"duration": 1000,
+			"motion": 6,
+			"delay":0
+		},
+		{
+			"name": "C-3",
+			"type": "ChildCare",
+			"description": "ChildCare pattern 3",
+			"filename": "C-3.mp4",
+			"duration": 1000,
+			"motion": 7,
+			"delay":0
+		},
+		{
+			"name": "C-4",
+			"type": "ChildCare",
+			"description": "ChildCare pattern 4",
+			"filename": "C-4.mp4",
+			"duration": 1000,
+			"motion": 8,
+			"delay":0
 		}
 	]
 }

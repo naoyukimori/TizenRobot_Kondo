@@ -80,6 +80,7 @@ private:
 	Tizen::Base::String __localIpAddress;
 	Tizen::Base::String __localDeviceName;
 	Tizen::Base::String __broadcastMessageHeader;
+	Tizen::Base::String __pResourcePath;
 	Tizen::Base::String* __pMediaPath;
 
 	Tizen::Net::Wifi::WifiDirectDevice* __pWifiDirectDevice;

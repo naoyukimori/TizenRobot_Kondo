@@ -4,7 +4,7 @@
  *  Created on: Oct 18, 2013
  *      Author: kien
  */
-
+#include <FSystem.h>
 #include "RobotChatForm.h"
 #include "MainForm.h"
 #include "SceneRegister.h"
@@ -25,9 +25,7 @@ using namespace Tizen::Base::Utility;
 using namespace Tizen::Ui::Scenes;
 using namespace Tizen::Web::Json;
 using namespace Tizen::Media;
-
-const wchar_t GALLERY_IMAGE_PATH1[] = L"Image/face1.png";
-const wchar_t GALLERY_IMAGE_PATH2[] = L"Image/face2.png";
+using namespace Tizen::System;
 
 RobotChatForm::RobotChatForm()
 	: __localIpAddress()
@@ -40,7 +38,7 @@ RobotChatForm::RobotChatForm()
 	, __pMutex(null)
 	, __pMediaPath(null)
 {
-
+	__pResourcePath = Environment::GetExternalStoragePath() + L"Robot/";
 }
 
 RobotChatForm::~RobotChatForm()
@@ -139,7 +137,7 @@ void
 RobotChatForm::GeneratePattern(void)
 {
 	File file;
-	String filePath = App::GetInstance()->GetAppDataPath() + L"patterns.json";
+	String filePath = __pResourcePath + L"Data/patterns.json";
 
 	//Read File Content into buffer
 	result r = file.Construct(filePath, L"r");
@@ -436,7 +434,8 @@ RobotChatForm::OnSocketReadyToReceive(Socket& socket)
 				const String* str = new String(pName->GetPointer());
 				if (message.Contains(*str))
 				{
-					__pMediaPath = new String(pPattern->GetMediaFilePath().GetPointer());
+					__pMediaPath = new String(__pResourcePath.GetPointer());
+					__pMediaPath->Append(pPattern->GetMediaFilePath().GetPointer());
 					pMotionIndex = pPattern->GetMotionNumber();
 					break;
 				}
@@ -519,7 +518,7 @@ RobotChatForm::GetFilesList()
 
 	__fileList.Construct();
 
-	String pDirPath(App::GetInstance()->GetAppResourcePath() + L"Image");
+	String pDirPath(__pResourcePath + L"Image");
 	pDir = new (std::nothrow) Directory();
 	pDir->Construct(pDirPath);
 
