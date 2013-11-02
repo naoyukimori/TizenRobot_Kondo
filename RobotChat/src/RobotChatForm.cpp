@@ -520,11 +520,15 @@ RobotChatForm::GetFilesList()
 
 	String pDirPath(__pResourcePath + L"Image");
 	pDir = new (std::nothrow) Directory();
-	pDir->Construct(pDirPath);
+	r = pDir->Construct(pDirPath);
+	if (r != E_SUCCESS)
+		goto CATCH;
 
 	TryCatch(r == E_SUCCESS, delete pDir ,"[%s] Failed to construct image directory", GetErrorMessage(r));
 
 	pDirEnum = pDir->ReadN();
+	if (pDirEnum == null)
+		goto CATCH;
 
 	TryCatch(pDirEnum != null, delete pDir ,"[%s] Failed to read entries from image directory", GetErrorMessage(GetLastResult()));
 
@@ -567,6 +571,10 @@ RobotChatForm::GetFilesList()
 		return E_FAILURE;
 	}
 CATCH:
+	if (pDir)
+		delete pDir;
+	if (pDirEnum)
+		delete pDirEnum;
 	return r;
 }
 
